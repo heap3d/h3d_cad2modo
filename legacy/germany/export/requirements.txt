@@ -1,0 +1,11 @@
+requirements for cad models:
+-	server surface to solid - simplified to solids (not faces)
+-	actual
+-	not oversimplified
+-	high detailed VISIBLE elements
+-	simplified screws (heads, to use as placeholders for library screws)
+-	filled small holes (threshold)
+-	instanced items
+-	module-based model
+
+-	color-coded for materials

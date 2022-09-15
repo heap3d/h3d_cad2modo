@@ -1,0 +1,11 @@
+192 192 255 - MachineCase
+0   128 128 - MiddleMetal
+128 128  0 - NonshineMetal
+255 192 255 - DullAluminium
+0   0   0 - BlackMetal
+0  255 255 - BrightMetal
+128  0   0 - DarkMetal
+255 255 255 - Screw
+232 113  8 - Rubber
+0   0  255 - BlackPlastic
+ 

@@ -1,0 +1,9 @@
+requirements for cad models:
+-	actual
+-	not oversimplified
+-	high detailed VISIBLE elements
+-	simplified screws (to use as placeholders for library screws)
+-	filled small holes (threshold)
+-	color-coded for materials
+-	instanced items
+-	module-based model

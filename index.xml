@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package version="801">
+	<kit name="h3d_cad2modo" restart="YES">
+		<source target="h3d_cad2modo/index.CFG">index.CFG</source>
+		<source target="h3d_cad2modo/scripts/cad_materials_collect.py">scripts/cad_materials_collect.py</source>
+		<source target="h3d_cad2modo/scripts/octane process material assembly.py">scripts/octane process material assembly.py</source>
+		<source target="h3d_cad2modo/scripts/octane save mesh assembly preset.py">scripts/octane save mesh assembly preset.py</source>
+		<source target="h3d_cad2modo/scripts/remap_table_UI.py">scripts/remap_table_UI.py</source>
+		<source target="h3d_cad2modo/scripts/RGB - Materials Default.txt">scripts/RGB - Materials Default.txt</source>
+		<source target="h3d_cad2modo/scripts/set def map path.py">scripts/set def map path.py</source>
+		<source target="h3d_cad2modo/scripts/set directory.py">scripts/set directory.py</source>
+		<source target="h3d_cad2modo/scripts/set filename.py">scripts/set filename.py</source>
+		<source target="h3d_cad2modo/scripts/set reflib directory.py">scripts/set reflib directory.py</source>
+		<source target="h3d_cad2modo/scripts/split mesh by material.py">scripts/split mesh by material.py</source>
+	</kit>
+	<message button="Help">h3d_cad2modo Kit installation complete.</message>
+</package>
