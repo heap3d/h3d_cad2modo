@@ -11,12 +11,10 @@ import modo
 import modo.constants as c
 import lx
 
-scene = modo.scene.current()
-
 
 def is_mask_valid(mask):
     # get scene render item
-    render_item = scene.renderItem
+    render_item = modo.scene.current().renderItem
     # return false if mask parent is not render item
     if mask.parent.id != render_item.id:
         return False
@@ -72,8 +70,8 @@ def main():
     print('')
     print('start...')
 
-    material_masks = [mask for mask in scene.items(itype=c.MASK_TYPE) if is_mask_valid(mask)]
-    initial_meshes = scene.meshes
+    material_masks = [mask for mask in modo.scene.current().items(itype=c.MASK_TYPE) if is_mask_valid(mask)]
+    initial_meshes = modo.scene.current().meshes
     print('material masks count:<{}>'.format(len(material_masks)))
     print(initial_meshes)
     for mask in material_masks:
@@ -82,7 +80,7 @@ def main():
         lx.eval('select.drop polygon')
         # deselect all items
         lx.eval('select.type item')
-        scene.deselect()
+        modo.scene.current().deselect()
         # select polygons by material
         mask.select()
         lx.eval('material.selectPolygons')
@@ -94,7 +92,7 @@ def main():
             if select_polys_selset_by_mask(mask):
                 lx.eval('select.cut')
                 if mesh_is_not_empty(mesh):
-                    new_mesh = scene.addMesh(name=mesh.baseName)
+                    new_mesh = modo.scene.current().addMesh(name=mesh.baseName)
                     new_mesh.select(replace=True)
                 lx.eval('select.paste')
                 remove_polys_selset_by_mask(mask)

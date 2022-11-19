@@ -11,8 +11,6 @@ import modo
 import modo.constants as c
 import lx
 
-scene = modo.scene.current()
-
 
 def get_materials_from_masks(masks):
     materials = list()
@@ -32,9 +30,9 @@ def main():
     print('start...')
 
     # collect unique colors into rgb_color_str set of ptag sets
-    material_masks = scene.selectedByType(itype=c.MASK_TYPE)
+    material_masks = modo.scene.current().selectedByType(itype=c.MASK_TYPE)
     if not material_masks:
-        material_masks = scene.items(itype=c.MASK_TYPE)
+        material_masks = modo.scene.current().items(itype=c.MASK_TYPE)
     materials = get_materials_from_masks(material_masks)
     for material in materials:
         color_red = material.channel('diffCol.R').get()  # read diffuse color values
@@ -75,12 +73,11 @@ def main():
 
     # convert ptag sets into polygon selection sets
     for color_str in rgb_colors_str:
-        scene.deselect()
+        modo.scene.current().deselect()
         # lx.eval('item.componentMode polygon true')  # enter polygon mode
         lx.eval('select.drop polygon')  # drop polygon selection
         for ptag in rgb_colors_str[color_str]:
-            ptag_loop_counter = 0
-            for mask in scene.items(itype='mask'):
+            for mask in modo.scene.current().items(itype='mask'):
                 if mask.channel('ptyp') is None:
                     continue
                 if mask.channel('ptyp').get() != 'Material':
@@ -92,10 +89,10 @@ def main():
         lx.eval('material.selectPolygons')  # select poly by material
         lx.eval('select.editSet "{}" add'.format(color_str))  # create polygon selection set
 
-    scene.deselect()
+    modo.scene.current().deselect()
     lx.eval('item.componentMode polygon false')  # enter item mode
     # select all meshes
-    for item in scene.items('mesh'):
+    for item in modo.scene.current().items(itype=c.MESH_TYPE):
         item.select()
     # enter polygon mode
     lx.eval('item.componentMode polygon true')  # enter polygon mode
@@ -137,7 +134,7 @@ def main():
     # create list of material mask items to remove
     remove_list = set()
     # fill remove_list
-    for mask in scene.items(itype='mask'):
+    for mask in modo.scene.current().items(itype=c.MASK_TYPE):
         mask.select(replace=True)
         # get the mesh item for the shader group 'mask.setMesh ?', skip if none
         if lx.eval('mask.setMesh ?') == '(all)':
@@ -147,11 +144,11 @@ def main():
         remove_list.add(mask)
     # remove material mask items in the list
     for item in remove_list:
-        scene.removeItems(itm=item, children=True)
+        modo.scene.current().removeItems(itm=item, children=True)
 
     # remove processed material masks
     for mask in material_masks:
-        scene.removeItems(mask, children=True)
+        modo.scene.current().removeItems(mask, children=True)
 
     lx.eval('select.type item')
     print('done.')

@@ -11,10 +11,12 @@ import modo
 import modo.constants as c
 import lx
 import os.path
+import sys
 
-USER_VAL_REFLIB_DIR_NAME = 'h3d_opma_reflib_dir'
-
-REFLIB_DIR = lx.eval('user.value {} ?'.format(USER_VAL_REFLIB_DIR_NAME))
+sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_utilites:}')))
+from h3d_utils import H3dUtils
+sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
+from h3d_kit_constants import *
 
 
 def save_solo_mesh_as_mesh_assembly_preset(mesh):
@@ -27,11 +29,11 @@ def save_solo_mesh_as_mesh_assembly_preset(mesh):
     if len(mesh.geometry.vertices) == 0:
         print('the mesh is empty')
         return
-    scene.deselect()
+    modo.scene.current().deselect()
     mesh.select()
     lx.eval('preset.createAssembly subtype:mesh')
     # get assembly group
-    group_selected = scene.selectedByType(itype=c.GROUP_TYPE)
+    group_selected = modo.scene.current().selectedByType(itype=c.GROUP_TYPE)
     print('assembly groups: <{}>'.format(group_selected))
     for group in group_selected:
         lx.eval('assembly.presetSave {} mesh "{}/{}.lxl" thumb:""'.format(group.id, REFLIB_DIR, mesh.name))
@@ -42,36 +44,42 @@ def save_multi_items_as_mesh_assembly_preset(item):
     # return if no children
     if not item.children():
         return
-    scene.deselect()
+    modo.scene.current().deselect()
     item.select()
     # select all children
     for child in item.children(recursive=True):
         child.select()
     lx.eval('preset.createAssembly subtype:mesh')
     # get assembly group
-    group_selected = scene.selectedByType(itype=c.GROUP_TYPE)
+    group_selected = modo.scene.current().selectedByType(itype=c.GROUP_TYPE)
     for group in group_selected:
         lx.eval('assembly.presetSave {} mesh "{}/{}.lxl" thumb:""'.format(group.id, REFLIB_DIR, item.name))
 
 
-scene = modo.scene.current()
+def main():
+    # check if directory exist, ask for select one
+    if not os.path.exists(REFLIB_DIR):
+        modo.dialogs.alert(
+            title='Directory error',
+            message='Directory <{}> doesn\'t exist, please select valid reference library directory'.format(REFLIB_DIR),
+            dtype='error'
+        )
+        exit()
 
-# check if directory exist, ask for select one
-if not os.path.exists(REFLIB_DIR):
-    modo.dialogs.alert(
-        title='Directory error',
-        message='Directory <{}> doesn\'t exist, please select valid reference library directory'.format(REFLIB_DIR),
-        dtype='error'
-    )
-    exit()
+    selected = modo.scene.current().selected
+    # get items with no parent
+    root_items = [item for item in selected if not item.parent]
+    print('root items list: {}'.format([i.name for i in root_items]))
 
-selected = scene.selected
-# get items with no parent
-root_items = [item for item in selected if not item.parent]
-print('root items list: {}'.format([i.name for i in root_items]))
+    for item in root_items:
+        if not item.children():
+            save_solo_mesh_as_mesh_assembly_preset(item)
+        else:
+            save_multi_items_as_mesh_assembly_preset(item)
 
-for item in root_items:
-    if not item.children():
-        save_solo_mesh_as_mesh_assembly_preset(item)
-    else:
-        save_multi_items_as_mesh_assembly_preset(item)
+
+h3du = H3dUtils()
+REFLIB_DIR = h3du.get_user_value(USER_VAL_REFLIB_DIR_NAME)
+
+if __name__ == '__main__':
+    main()

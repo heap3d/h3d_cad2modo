@@ -6,31 +6,20 @@
 # modo python
 # for processing octane material in preset
 # load preset, clean all assemblies
-# re initiate octane override
+# re-initiate octane override
 # ================================
-import sys
 
 import modo
 import modo.constants as c
 import lx
 import math
 import os.path
+import sys
 
-RENDER_RESOLUTION = 512
-RENDER_AA = 's64'
-RENDER_SAMPLES = 2048
-RENDER_SHADER_RATE = 0.0
-USER_VAL_CAM_ROT_X_NAME = 'h3d_opma_cam_rotX'
-USER_VAL_CAM_ROT_Y_NAME = 'h3d_opma_cam_rotY'
-USER_VAL_ENV_ROT_Y_NAME = 'h3d_opma_env_rotY'
-USER_VAL_ENV_PATH_NAME = 'h3d_opma_env_path'
-USER_VAL_STORE_DIR_NAME = 'h3d_opma_store_dir'
-USER_VAL_SAVE_ENABLED_NAME = 'h3d_opma_save_enabled'
-USER_VAL_REND_SETUP_NAME = 'h3d_opma_rend_setup'
-USER_VAL_OCTMAT_SETUP_NAME = 'h3d_opma_octmat_setup'
-USER_VAL_LIGHT_SETUP_NAME = 'h3d_opma_light_setup'
-USER_VAL_CAM_SETUP_NAME = 'h3d_opma_cam_setup'
-USER_VAL_ENV_SETUP_NAME = 'h3d_opma_env_setup'
+sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_utilites:}')))
+from h3d_utils import H3dUtils
+sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
+from h3d_kit_constants import *
 
 
 def is_empty_assembly(item):
@@ -54,7 +43,7 @@ def clear_group(item):
         for child in item.itemGraph('parent').reverse():
             clear_group(child)
     # remove empty assembly
-    scene.removeItems(item)
+    modo.scene.current().removeItems(item)
 
 
 def process_assemblies(assemblies):
@@ -69,10 +58,10 @@ def process_octane_overrides():
     if not OCTMAT_SETUP:
         return
     # get octane override material list
-    octane_overrides = scene.items(itype='material.octaneRenderer')
+    octane_overrides = modo.scene.current().items(itype='material.octaneRenderer')
     for octane_override in octane_overrides:
         # edit in schematic for each octane override material
-        scene.deselect()
+        modo.scene.current().deselect()
         lx.eval('!!select.subItem {} set'.format(octane_override.id))
         lx.eval('!!octane.materialMacro schematicEdit')
 
@@ -81,17 +70,17 @@ def process_render_settings():
     if not REND_SETUP:
         return
     # render settings setup
-    scene.renderItem.channel('resX').set(RENDER_RESOLUTION)
-    scene.renderItem.channel('resY').set(RENDER_RESOLUTION)
-    scene.renderItem.channel('aa').set(RENDER_AA)
-    scene.renderItem.channel('reflSmps').set(RENDER_SAMPLES)
-    scene.renderItem.channel('coarseRate').set(RENDER_SHADER_RATE)
+    modo.scene.current().renderItem.channel('resX').set(RENDER_RESOLUTION)
+    modo.scene.current().renderItem.channel('resY').set(RENDER_RESOLUTION)
+    modo.scene.current().renderItem.channel('aa').set(RENDER_AA)
+    modo.scene.current().renderItem.channel('reflSmps').set(RENDER_SAMPLES)
+    modo.scene.current().renderItem.channel('coarseRate').set(RENDER_SHADER_RATE)
     # turn environment important sampling on
-    scene.renderItem.channel('envSample').set(1)
+    modo.scene.current().renderItem.channel('envSample').set(1)
     # turn irradiance caching off
-    scene.renderItem.channel('irrCache').set(0)
-    scene.renderItem.channel('envRays').set(RENDER_SAMPLES)
-    shaders = scene.items(itype='defaultShader')
+    modo.scene.current().renderItem.channel('irrCache').set(0)
+    modo.scene.current().renderItem.channel('envRays').set(RENDER_SAMPLES)
+    shaders = modo.scene.current().items(itype='defaultShader')
     for shader in shaders:
         shader.channel('shadeRate').set(RENDER_SHADER_RATE)
 
@@ -102,7 +91,7 @@ def process_lights():
     if not LIGHT_SETUP:
         return
     # turn all lights off
-    for light in scene.items(itype=c.LIGHT_TYPE):
+    for light in modo.scene.current().items(itype=c.LIGHT_TYPE):
         light.channel('visible').set('allOff')
 
 
@@ -113,12 +102,12 @@ def process_environment():
         return
     # environment setup
     # check if env exist and delete old one
-    envs = scene.items(itype=c.ENVIRONMENT_TYPE)
+    envs = modo.scene.current().items(itype=c.ENVIRONMENT_TYPE)
     for env in envs:
         env.channel('visCam').set(0)
         for item in env.children():
             if item.type == 'imageMap':
-                scene.removeItems(item)
+                modo.scene.current().removeItems(item)
         lx.eval('texture.new "{}"'.format(ENV_PATH))
         lx.eval('texture.parent {} 1'.format(env.id))
         lx.eval('item.channel (anyTxtrLocator)$projType spherical')
@@ -139,8 +128,8 @@ def process_camera(camera):
     lx.eval('transform.channel rot.X {}'.format(CAM_ROT_X))
     lx.eval('transform.channel rot.Y {}'.format(CAM_ROT_Y))
     lx.eval('transform.channel rot.Z {}'.format(0.0))
-    scene.deselect()
-    for mesh in scene.items(itype=c.MESH_TYPE):
+    modo.scene.current().deselect()
+    for mesh in modo.scene.current().items(itype=c.MESH_TYPE):
         mesh.select()
     lx.eval('view3d.projection cam')
     lx.eval('camera.fit true true')
@@ -155,21 +144,9 @@ def save_as_preset_name(filename):
         lx.eval('scene.saveAs "{}/{}.lxo" $LXOB false'.format(STORE_DIR, filename))
 
 
-if __name__ == '__main__':
-    # get user values from UI
-    CAM_ROT_X = math.degrees(lx.eval('user.value {} ?'.format(USER_VAL_CAM_ROT_X_NAME)))
-    CAM_ROT_Y = math.degrees(lx.eval('user.value {} ?'.format(USER_VAL_CAM_ROT_Y_NAME)))
-    ENV_ROT_Y = math.degrees(lx.eval('user.value {} ?'.format(USER_VAL_ENV_ROT_Y_NAME)))
-    ENV_PATH = lx.eval('user.value {} ?'.format(USER_VAL_ENV_PATH_NAME))
-    STORE_DIR = lx.eval('user.value {} ?'.format(USER_VAL_STORE_DIR_NAME))
-    SAVE_ENABLED = lx.eval('user.value {} ?'.format(USER_VAL_SAVE_ENABLED_NAME))
-    REND_SETUP = lx.eval('user.value {} ?'.format(USER_VAL_REND_SETUP_NAME))
-    OCTMAT_SETUP = lx.eval('user.value {} ?'.format(USER_VAL_OCTMAT_SETUP_NAME))
-    LIGHT_SETUP = lx.eval('user.value {} ?'.format(USER_VAL_LIGHT_SETUP_NAME))
-    CAM_SETUP = lx.eval('user.value {} ?'.format(USER_VAL_CAM_SETUP_NAME))
-    ENV_SETUP = lx.eval('user.value {} ?'.format(USER_VAL_ENV_SETUP_NAME))
-
-    scene = modo.scene.current()
+def main():
+    global SAVE_ENABLED
+    global REND_SETUP
     # check if environment image map exist
     if not os.path.exists(ENV_PATH) and ENV_SETUP:
         modo.dialogs.alert(
@@ -195,7 +172,7 @@ if __name__ == '__main__':
                 SAVE_ENABLED = False
 
     # get selected groups list
-    groups = scene.selectedByType(itype=c.GROUP_TYPE)
+    groups = modo.scene.current().selectedByType(itype=c.GROUP_TYPE)
     # get root assemblies list
     root_assemblies = [item for item in groups if not item.itemGraph('parent').forward()]
     process_assemblies(root_assemblies)
@@ -209,14 +186,14 @@ if __name__ == '__main__':
     process_environment()
 
     # select camera 'Camera' or first one in the scene
-    cameras = scene.items(itype=c.CAMERA_TYPE, name='Camera')
+    cameras = modo.scene.current().items(itype=c.CAMERA_TYPE, name='Camera')
     if not cameras:
-        cameras = scene.cameras
+        cameras = modo.scene.current().cameras
     if cameras:
         process_camera(cameras[0])
 
     # get root material mask list
-    root_masks = [mask for mask in scene.items(itype=c.MASK_TYPE) if mask.parent.type == 'polyRender']
+    root_masks = [mask for mask in modo.scene.current().items(itype=c.MASK_TYPE) if mask.parent.type == 'polyRender']
     # move root_mask children to root
     preset_name = ''
     for mask in root_masks:
@@ -226,8 +203,27 @@ if __name__ == '__main__':
         preset_name = mask.name[:-15]
         for mask_child in mask.children(recursive=False):
             if mask_child.type == 'mask':
-                mask_child.setParent(scene.renderItem, 1)
+                mask_child.setParent(modo.scene.current().renderItem, 1)
         # remove root_mask
-        scene.removeItems(mask)
+        modo.scene.current().removeItems(mask)
 
     save_as_preset_name(preset_name)
+
+
+h3du = H3dUtils()
+
+# get user values from UI
+CAM_ROT_X = math.degrees(h3du.get_user_value(USER_VAL_CAM_ROT_X_NAME))
+CAM_ROT_Y = math.degrees(h3du.get_user_value(USER_VAL_CAM_ROT_Y_NAME))
+ENV_ROT_Y = math.degrees(h3du.get_user_value(USER_VAL_ENV_ROT_Y_NAME))
+ENV_PATH = h3du.get_user_value(USER_VAL_ENV_PATH_NAME)
+STORE_DIR = h3du.get_user_value(USER_VAL_STORE_DIR_NAME)
+SAVE_ENABLED = h3du.get_user_value(USER_VAL_SAVE_ENABLED_NAME)
+REND_SETUP = h3du.get_user_value(USER_VAL_REND_SETUP_NAME)
+OCTMAT_SETUP = h3du.get_user_value(USER_VAL_OCTMAT_SETUP_NAME)
+LIGHT_SETUP = h3du.get_user_value(USER_VAL_LIGHT_SETUP_NAME)
+CAM_SETUP = h3du.get_user_value(USER_VAL_CAM_SETUP_NAME)
+ENV_SETUP = h3du.get_user_value(USER_VAL_ENV_SETUP_NAME)
+
+if __name__ == '__main__':
+    main()

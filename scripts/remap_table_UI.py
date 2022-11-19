@@ -12,52 +12,16 @@ import modo
 import lx
 import os.path
 import modo.constants as c
-import logging
+import sys
 
-
-scene = modo.scene.current()
-COLOR_NAME_PREFIX = '#color# '
-DEFAULT_MATERIAL_ASSIGNMENT = 'Default'
-KIT_NAME = 'h3d_cad2modo'
-KIT_SCRITS_NAME = 'scripts'
-MAP_DEFAULT_FILENAME = 'RGB - Materials Default.txt'
-MATERIAL_SUFFIX = ' (Material)'
-USERVAL_NAME_COLOR_BASE = 'h3d_rtu_color'
-USERVAL_NAME_MATERIAL_BASE = 'h3d_rtu_material'
-USERVAL_NAME_MATERIAL_DEFAULT = 'h3d_rtu_material_default'
-USERVAL_NAME_COLORS_STORE = 'h3d_rtu_colors_store'
-USERVAL_NAME_MATERIALS_STORE = 'h3d_rtu_materials_store'
-USERVAL_NAME_MAP_STORE = 'h3d_rtu_map_store'
-USERVAL_NAME_PAGE_START = 'h3d_rtu_page_start'
-USERVAL_NAME_PAGE_SIZE = 'h3d_rtu_page_size'
-USERVAL_NAME_OVERSIZE = 'h3d_rtu_oversize'
-USERVAL_NAME_DEF_MAP_PATH = 'h3d_rtu_default_map_path'
-PAGE_SIZE = 0  # variable declaration
-MISSING_COLOR = '0.0 1.0 0.0'
-
-SELECT_TAG_ID = 0
-SOURCE_TAG_ID = 1
-TARGET_TAG_ID = 2
-
-RM_PREV = 1
-RM_NEXT = 2
-RM_SAVE = 3
-RM_SCAN = 4
-RM_LOAD = 5
-RM_APPLY = 6
-RM_SELECT = 7
-
-
-# def get_scene_dir():
-#     return os.path.splitext(scene.filename)[0]
-
-
-# def get_color_map_filename():
-#     return ''.format()
+sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_utilites:}')))
+from h3d_utils import H3dUtils
+sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
+from h3d_kit_constants import *
 
 
 def get_page_start():
-    page_start = lx.eval('user.value {} ?'.format(USERVAL_NAME_PAGE_START))
+    page_start = h3du.get_user_value(USERVAL_NAME_PAGE_START)
     return page_start
 
 
@@ -66,7 +30,7 @@ def set_page_start(start, tags):
         start = len(tags) - 1
     if start < 1:
         start = 1
-    lx.eval('user.value {} {}'.format(USERVAL_NAME_PAGE_START, start))
+    h3du.set_user_value(USERVAL_NAME_PAGE_START, start)
     return get_page_start()
 
 
@@ -97,7 +61,7 @@ def get_tags_list(mode):
     tags = list()
     if mode == RM_SCAN:
         # get material tag from mesh polygons
-        for mesh in scene.items(itype=c.MESH_TYPE):
+        for mesh in modo.scene.current().items(itype=c.MESH_TYPE):
             for polygon in mesh.geometry.polygons:
                 try:
                     tag = polygon.materialTag
@@ -120,19 +84,18 @@ def get_tags_list(mode):
         if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(USERVAL_NAME_COLORS_STORE)):
             lx.eval('user.defNew {} type:string life:temporary'.format(USERVAL_NAME_COLORS_STORE))
         # store colors string
-        lx.eval('user.value {} "{}"'.format(USERVAL_NAME_COLORS_STORE, colors_string_store))
+        h3du.set_user_value(USERVAL_NAME_COLORS_STORE, colors_string_store)
 
     else:
         # read colors list from user value
         try:
-            colors_string_store = lx.eval('!user.value {} ?'.format(USERVAL_NAME_COLORS_STORE))
+            colors_string_store = h3du.get_user_value(USERVAL_NAME_COLORS_STORE)
             tags.extend(colors_string_store.split(';'))
         except RuntimeError:
             print('The scene is not scanned. Press the <scan scene> button to scan.')
             exit()
     if len(tags) < 1 or (len(tags) == 1 and tags[0] == ''):
         print('Void tags list. Try to scan scene or run Consolidate CAD Materials script first.')
-        logging.debug('tags: {}'.format(tags))
         exit()
     return tags
 
@@ -140,7 +103,7 @@ def get_tags_list(mode):
 def get_materials_list(mode, tags):
     materials_set = set()
     if mode == RM_SCAN:
-        for mask in scene.items(itype='mask'):
+        for mask in modo.scene.current().items(itype='mask'):
             if mask.channel('ptyp') is None:
                 continue
             if mask.channel('ptyp').get() != 'Material':
@@ -165,10 +128,10 @@ def get_materials_list(mode, tags):
         if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(USERVAL_NAME_MATERIALS_STORE)):
             lx.eval('user.defNew {} type:string life:temporary'.format(USERVAL_NAME_MATERIALS_STORE))
         # store materials string
-        lx.eval('user.value {} "{}"'.format(USERVAL_NAME_MATERIALS_STORE, materials_string_store))
+        h3du.set_user_value(USERVAL_NAME_MATERIALS_STORE, materials_string_store)
     else:
         # read materials list from user value
-        materials_string_store = lx.eval('user.value {} ?'.format(USERVAL_NAME_MATERIALS_STORE))
+        materials_string_store = h3du.get_user_value(USERVAL_NAME_MATERIALS_STORE)
         materials = list(materials_string_store.split('\t'))
 
     return materials
@@ -218,7 +181,7 @@ def update_table(tags, start):
     if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(USERVAL_NAME_MAP_STORE)):
         print('user.value {} not exist. Try scan scene first'.format(USERVAL_NAME_MAP_STORE))
         exit()
-    tags_materials_map_store_string = lx.eval('user.value {} ?'.format(USERVAL_NAME_MAP_STORE))
+    tags_materials_map_store_string = h3du.get_user_value(USERVAL_NAME_MAP_STORE)
     tags_materials_map = [int(x) for x in tags_materials_map_store_string.split(';')]
 
     for index in range(start, finish):
@@ -226,7 +189,7 @@ def update_table(tags, start):
         tags_materials_map[index] = int(material_ui_id)
 
     tags_materials_map_store_string = ';'.join(['{}'.format(x) for x in tags_materials_map])  # compose string
-    lx.eval('user.value {} {}'.format(USERVAL_NAME_MAP_STORE, tags_materials_map_store_string))  # store to config
+    h3du.set_user_value(USERVAL_NAME_MAP_STORE, tags_materials_map_store_string)  # store to config
 
     return tags_materials_map
 
@@ -236,7 +199,7 @@ def get_material_ui(ui_line):
     if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(user_value_name_material)):
         print('get_material_ui(): User value <{}> not exist, return None'.format(user_value_name_material))
         return None
-    return lx.eval('user.value {} ?'.format(user_value_name_material))
+    return h3du.get_user_value(user_value_name_material)
 
 
 def clear_table_ui():
@@ -270,7 +233,7 @@ def build_line(ui_line, map_index, tags, materials, tags_materials_map):
     lx.eval('user.defNew {} type:color life:temporary'.format(user_value_name_color))
     # set color for UI element
     float_color_str = get_float_color_str_from_mask(tags[map_index])
-    lx.eval('user.value {} {{{}}}'.format(user_value_name_color, float_color_str))
+    h3du.set_user_value(user_value_name_color, float_color_str)
     # select line with zero-based index
     lx.eval('select.attr {{93645054749:sheet/{}}} set'.format(ui_line - 1))
     cur_line = lx.eval('select.attr ?')
@@ -287,7 +250,7 @@ def build_line(ui_line, map_index, tags, materials, tags_materials_map):
     lx.eval('user.def {} list "{}"'.format(user_value_name_material, materials_list_string))
     lx.eval('user.def {} listnames "{}"'.format(user_value_name_material, materials_listnames_string))
     lx.eval('user.def {} attr:username value:{}'.format(user_value_name_material, tags[map_index]))
-    lx.eval('user.value {} {}'.format(user_value_name_material, tags_materials_map[map_index]))
+    h3du.set_user_value(user_value_name_material, tags_materials_map[map_index])
     # select line target material element and assign tooltip
     lx.eval('select.attr {{{}/{}}} set'.format(cur_line, TARGET_TAG_ID))
     lx.eval('attr.tooltip "select material to replace <{}> tag"'.format(tags[map_index]))
@@ -306,7 +269,7 @@ def int_to_float_color(int_color):
 
 
 def get_sel_color_index(tags):
-    selected = scene.selectedByType('mask')
+    selected = modo.scene.current().selectedByType('mask')
     selected_colors = list()
     for mask in selected:
         if not mask.name.startswith(COLOR_NAME_PREFIX):
@@ -344,14 +307,14 @@ def scan_init(tags, materials):
     if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(USERVAL_NAME_OVERSIZE)):
         lx.eval('user.defNew {} type:boolean life:temporary'.format(USERVAL_NAME_OVERSIZE))
     if len(tags) - 1 <= PAGE_SIZE:
-        lx.eval('user.value {} false'.format(USERVAL_NAME_OVERSIZE))
+        h3du.set_user_value(USERVAL_NAME_OVERSIZE, False)
     else:
-        lx.eval('user.value {} true'.format(USERVAL_NAME_OVERSIZE))
+        h3du.set_user_value(USERVAL_NAME_OVERSIZE, True)
     set_page_start(tags=tags, start=1)
     tag_material_map = list()
     if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(USERVAL_NAME_MATERIAL_DEFAULT)):
         lx.eval('user.defNew {} type:integer life:temporary'.format(USERVAL_NAME_MATERIAL_DEFAULT))
-    lx.eval('user.value {} {}'.format(USERVAL_NAME_MATERIAL_DEFAULT, 0))
+    h3du.set_user_value(USERVAL_NAME_MATERIAL_DEFAULT, 0)
     # initiate tags_materials_map
     for i in range(1, len(tags)):
         # tag_material_map.append(i if i < materials_count else 0)
@@ -369,7 +332,7 @@ def scan_init(tags, materials):
     tags_materials_map_store_string = ';'.join(['{}'.format(x) for x in tag_material_map])  # compose string
     if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(USERVAL_NAME_MAP_STORE)):
         lx.eval('user.defNew {} type:string life:temporary'.format(USERVAL_NAME_MAP_STORE))
-    lx.eval('user.value {} {}'.format(USERVAL_NAME_MAP_STORE, tags_materials_map_store_string))  # store to config
+    h3du.set_user_value(USERVAL_NAME_MAP_STORE, tags_materials_map_store_string)  # store to config
 
     return tag_material_map
 
@@ -393,7 +356,7 @@ def save_map(tags, materials, tags_materials_map):
     if not len(map_lines):
         print('No data to save')
         exit()
-    scene_name = scene.name.split('.')[0].strip()
+    scene_name = modo.scene.current().name.split('.')[0].strip()
     if not scene_name or scene_name == '':
         scene_name = 'RGB - Materials'
     # get directory and file name (file save as dialog box)
@@ -441,7 +404,6 @@ def load_map(filename, tags, materials, tags_materials_map):
             s.strip().zfill(3) for s in color_str_num.split(' ') if s.strip() != ''
         ))
         color_str = COLOR_NAME_PREFIX + color_str_num
-        # logging.debug('color_str:<{}>   color_str_num:<{}>   material_str:<{}>'.format(color_str, color_str_num, material_str))
         if color_str not in tags:
             # skip if no color found
             continue
@@ -471,24 +433,20 @@ def get_load_map_filename():
 
 
 def get_default_load_map_filename():
-    config_default_filename = lx.eval('user.value {} ?'.format(USERVAL_NAME_DEF_MAP_PATH))
+    config_default_filename = h3du.get_user_value(USERVAL_NAME_DEF_MAP_PATH)
     if os.path.exists(config_default_filename):
-        logging.debug('default_filename:<{}>'.format(config_default_filename))
         print('default map table path:<{}>'.format(config_default_filename))
         return config_default_filename
     kits_path = lx.eval('query platformservice path.path ? kits')
-    default_filename = os.path.join(kits_path, KIT_NAME, KIT_SCRITS_NAME, MAP_DEFAULT_FILENAME)
+    default_filename = os.path.join(kits_path, KIT_NAME, KIT_SCRIPTS_NAME, MAP_DEFAULT_FILENAME)
     if os.path.exists(default_filename):
-        logging.debug('default_filename:<{}>'.format(default_filename))
         print('default map table path:<{}>'.format(default_filename))
         return default_filename
     lux_kits_path = kits_path.replace('\\Kits', '\\Luxology\\Kits')
-    default_filename = os.path.join(lux_kits_path, KIT_NAME, KIT_SCRITS_NAME, MAP_DEFAULT_FILENAME)
+    default_filename = os.path.join(lux_kits_path, KIT_NAME, KIT_SCRIPTS_NAME, MAP_DEFAULT_FILENAME)
     if os.path.exists(default_filename):
-        logging.debug('default_filename:<{}>'.format(default_filename))
         print('default map table path:<{}>'.format(default_filename))
         return default_filename
-    logging.debug('default map table path not found')
     print('default map table path not found')
     return config_default_filename
 
@@ -507,10 +465,9 @@ def apply_command(tags, materials, tags_materials_map):
         lx.eval('select.createSet "{}"'.format(tags[source_id]))
         selection_sets[tags[source_id]] = materials[target_id]
         lx.eval('select.drop polygon')
-        logging.debug('apply_command:    source_id:<{}>    target_id:<{}>'.format(tags[source_id], materials[target_id]))
     # select all mesh items
-    scene.deselect()
-    meshes = scene.items(itype=c.MESH_TYPE)
+    modo.scene.current().deselect()
+    meshes = modo.scene.current().items(itype=c.MESH_TYPE)
     for mesh in meshes:
         mesh.select(replace=False)
     lx.eval('select.type polygon')
@@ -525,12 +482,12 @@ def apply_command(tags, materials, tags_materials_map):
 
     lx.eval('select.drop polygon')
     lx.eval('select.type item')
-    scene.deselect()
+    modo.scene.current().deselect()
 
 
 def get_float_color_str_from_mask(tag_name):
     color_str = MISSING_COLOR
-    for mask in scene.items(itype=c.MASK_TYPE):
+    for mask in modo.scene.current().items(itype=c.MASK_TYPE):
         if mask.channel('ptyp') is None:
             continue
         if mask.channel('ptyp').get() != 'Material':
@@ -552,7 +509,7 @@ def get_float_color_str_from_mask(tag_name):
 
 
 def select_polygons_by_tag(select_material_tag):
-    for mask in scene.items(itype=c.MASK_TYPE):
+    for mask in modo.scene.current().items(itype=c.MASK_TYPE):
         if mask.channel('ptyp') is None:
             continue
         if mask.channel('ptyp').get() != 'Material':
@@ -564,28 +521,17 @@ def select_polygons_by_tag(select_material_tag):
     lx.eval('material.selectPolygons')
 
 
-def debug_exit(msg='debug exit'):
-    logging.debug(msg)
-    exit()
-
-
 def main():
-    level = logging.DEBUG
-    fmt = '[%(levelname)s] %(asctime)s - %(message)s'
-    scene_filename = scene.filename
+    scene_filename = modo.scene.current().filename
     if scene_filename is None:
         print('No active scene found, try open a scene first')
         exit()
-    filename = scene_filename + '.log'
-    logging.basicConfig(filename=filename, filemode='w', level=level, format=fmt)
     print('')
     print('start...')
-    logging.info('\n')
-    logging.info('start...')
 
     # get remap table page size from config
     global PAGE_SIZE
-    PAGE_SIZE = lx.eval('user.value "{}" ?'.format(USERVAL_NAME_PAGE_SIZE))
+    PAGE_SIZE = h3du.get_user_value(USERVAL_NAME_PAGE_SIZE)
 
     run_mode = read_args()
     global_tags = get_tags_list(mode=run_mode)
@@ -662,9 +608,10 @@ def main():
         select_polygons_by_tag(global_tags[tag_id])
 
     print('done.')
-    logging.info('done.')
-    logging.shutdown()
 
+
+h3du = H3dUtils()
 
 if __name__ == '__main__':
+    PAGE_SIZE = 0
     main()
