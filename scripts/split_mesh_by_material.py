@@ -5,7 +5,7 @@
 # --------------------------------
 # modo python
 # EMAG
-# Split mesh by material
+# Split selected mesh items by material
 
 import modo
 import modo.constants as c
@@ -53,6 +53,7 @@ def set_polys_selset_by_mask(mask):
 
 def get_selset_name(base_name):
     name = '$delete$ h3d split mesh by material - {}'.format(base_name)
+
     return name
 
 
@@ -63,6 +64,7 @@ def mesh_is_not_empty(mesh):
         return False
     if not len(mesh.geometry.polygons):
         return False
+
     return True
 
 
@@ -71,9 +73,8 @@ def main():
     print('start...')
 
     material_masks = [mask for mask in modo.scene.current().items(itype=c.MASK_TYPE) if is_mask_valid(mask)]
-    initial_meshes = modo.scene.current().meshes
-    print('material masks count:<{}>'.format(len(material_masks)))
-    print(initial_meshes)
+    initial_meshes = modo.scene.current().selectedByType(itype=c.MESH_TYPE)
+
     for mask in material_masks:
         # deselect all polygons
         lx.eval('select.type polygon')
@@ -85,17 +86,18 @@ def main():
         mask.select()
         lx.eval('material.selectPolygons')
         set_polys_selset_by_mask(mask)
+
         for mesh in initial_meshes:
-            print('<{}>:<{}>'.format(mask.name, mesh.name))
             lx.eval('select.type item')
             mesh.select(replace=True)
-            if select_polys_selset_by_mask(mask):
-                lx.eval('select.cut')
-                if mesh_is_not_empty(mesh):
-                    new_mesh = modo.scene.current().addMesh(name=mesh.baseName)
-                    new_mesh.select(replace=True)
-                lx.eval('select.paste')
-                remove_polys_selset_by_mask(mask)
+            if not select_polys_selset_by_mask(mask):
+                continue
+            lx.eval('select.cut')
+            if mesh_is_not_empty(mesh):
+                new_mesh = modo.scene.current().addMesh(name=mesh.baseName)
+                new_mesh.select(replace=True)
+            lx.eval('select.paste')
+            remove_polys_selset_by_mask(mask)
 
     print('done.')
 
