@@ -17,11 +17,11 @@ import sys
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_utilites:}')))
 from h3d_utils import H3dUtils
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
-from h3d_kit_constants import *
+import h3d_kit_constants as h3dc
 
 
 def get_page_start():
-    page_start = h3du.get_user_value(USERVAL_NAME_PAGE_START)
+    page_start = h3du.get_user_value(h3dc.USERVAL_NAME_PAGE_START)
     return page_start
 
 
@@ -30,27 +30,27 @@ def set_page_start(start, tags):
         start = len(tags) - 1
     if start < 1:
         start = 1
-    h3du.set_user_value(USERVAL_NAME_PAGE_START, start)
+    h3du.set_user_value(h3dc.USERVAL_NAME_PAGE_START, start)
     return get_page_start()
 
 
 def read_args():
-    mode = RM_SCAN
+    mode = h3dc.RM_SCAN
     arg_command = lx.args()[0]
     if arg_command == '-prev':
-        mode = RM_PREV
+        mode = h3dc.RM_PREV
     elif arg_command == '-next':
-        mode = RM_NEXT
+        mode = h3dc.RM_NEXT
     elif arg_command == '-scan':
-        mode = RM_SCAN
+        mode = h3dc.RM_SCAN
     elif arg_command == '-save':
-        mode = RM_SAVE
+        mode = h3dc.RM_SAVE
     elif arg_command == '-load':
-        mode = RM_LOAD
+        mode = h3dc.RM_LOAD
     elif arg_command == '-apply':
-        mode = RM_APPLY
+        mode = h3dc.RM_APPLY
     elif arg_command == '-select':
-        mode = RM_SELECT
+        mode = h3dc.RM_SELECT
     else:
         print('Unknown argument(s):', lx.args())
     return mode
@@ -59,7 +59,7 @@ def read_args():
 def get_tags_list(mode):
     # colors = list()
     tags = list()
-    if mode == RM_SCAN:
+    if mode == h3dc.RM_SCAN:
         # get material tag from mesh polygons
         for mesh in modo.scene.current().items(itype=c.MESH_TYPE):
             for polygon in mesh.geometry.polygons:
@@ -77,19 +77,19 @@ def get_tags_list(mode):
         # sort tags list
         tags.sort()
         # insert dummy line at the start for indexing consistency
-        tags.insert(0, DEFAULT_MATERIAL_ASSIGNMENT)
+        tags.insert(0, h3dc.DEFAULT_MATERIAL_ASSIGNMENT)
         # store colors list in user value
         colors_string_store = ';'.join(tags)
         # create user value if not created
-        if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(USERVAL_NAME_COLORS_STORE)):
-            lx.eval('user.defNew {} type:string life:temporary'.format(USERVAL_NAME_COLORS_STORE))
+        if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(h3dc.USERVAL_NAME_COLORS_STORE)):
+            lx.eval('user.defNew {} type:string life:temporary'.format(h3dc.USERVAL_NAME_COLORS_STORE))
         # store colors string
-        h3du.set_user_value(USERVAL_NAME_COLORS_STORE, colors_string_store)
+        h3du.set_user_value(h3dc.USERVAL_NAME_COLORS_STORE, colors_string_store)
 
     else:
         # read colors list from user value
         try:
-            colors_string_store = h3du.get_user_value(USERVAL_NAME_COLORS_STORE)
+            colors_string_store = h3du.get_user_value(h3dc.USERVAL_NAME_COLORS_STORE)
             tags.extend(colors_string_store.split(';'))
         except RuntimeError:
             print('The scene is not scanned. Press the <scan scene> button to scan.')
@@ -102,7 +102,7 @@ def get_tags_list(mode):
 
 def get_materials_list(mode, tags):
     materials_set = set()
-    if mode == RM_SCAN:
+    if mode == h3dc.RM_SCAN:
         for mask in modo.scene.current().items(itype='mask'):
             if mask.channel('ptyp') is None:
                 continue
@@ -116,22 +116,22 @@ def get_materials_list(mode, tags):
         # add tags to the materials
         materials_set.update(tags)
         # remove Default tag  to add it later at the start
-        materials_set.remove(DEFAULT_MATERIAL_ASSIGNMENT)
+        materials_set.remove(h3dc.DEFAULT_MATERIAL_ASSIGNMENT)
         # convert set to list
         materials = list(materials_set)
         # store materials list in user value
         materials.sort()
         # insert Default at the top of the materials list
-        materials.insert(0, DEFAULT_MATERIAL_ASSIGNMENT)
+        materials.insert(0, h3dc.DEFAULT_MATERIAL_ASSIGNMENT)
         materials_string_store = '\t'.join(materials)
         # create user value if not created
-        if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(USERVAL_NAME_MATERIALS_STORE)):
-            lx.eval('user.defNew {} type:string life:temporary'.format(USERVAL_NAME_MATERIALS_STORE))
+        if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(h3dc.USERVAL_NAME_MATERIALS_STORE)):
+            lx.eval('user.defNew {} type:string life:temporary'.format(h3dc.USERVAL_NAME_MATERIALS_STORE))
         # store materials string
-        h3du.set_user_value(USERVAL_NAME_MATERIALS_STORE, materials_string_store)
+        h3du.set_user_value(h3dc.USERVAL_NAME_MATERIALS_STORE, materials_string_store)
     else:
         # read materials list from user value
-        materials_string_store = h3du.get_user_value(USERVAL_NAME_MATERIALS_STORE)
+        materials_string_store = h3du.get_user_value(h3dc.USERVAL_NAME_MATERIALS_STORE)
         materials = list(materials_string_store.split('\t'))
 
     return materials
@@ -178,10 +178,10 @@ def update_table(tags, start):
     if finish > len(tags):
         finish = len(tags)
 
-    if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(USERVAL_NAME_MAP_STORE)):
-        print('user.value {} not exist. Try scan scene first'.format(USERVAL_NAME_MAP_STORE))
+    if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(h3dc.USERVAL_NAME_MAP_STORE)):
+        print('user.value {} not exist. Try scan scene first'.format(h3dc.USERVAL_NAME_MAP_STORE))
         exit()
-    tags_materials_map_store_string = h3du.get_user_value(USERVAL_NAME_MAP_STORE)
+    tags_materials_map_store_string = h3du.get_user_value(h3dc.USERVAL_NAME_MAP_STORE)
     tags_materials_map = [int(x) for x in tags_materials_map_store_string.split(';')]
 
     for index in range(start, finish):
@@ -189,13 +189,13 @@ def update_table(tags, start):
         tags_materials_map[index] = int(material_ui_id)
 
     tags_materials_map_store_string = ';'.join(['{}'.format(x) for x in tags_materials_map])  # compose string
-    h3du.set_user_value(USERVAL_NAME_MAP_STORE, tags_materials_map_store_string)  # store to config
+    h3du.set_user_value(h3dc.USERVAL_NAME_MAP_STORE, tags_materials_map_store_string)  # store to config
 
     return tags_materials_map
 
 
 def get_material_ui(ui_line):
-    user_value_name_material = '{}{:03d}'.format(USERVAL_NAME_MATERIAL_BASE, ui_line)
+    user_value_name_material = '{}{:03d}'.format(h3dc.USERVAL_NAME_MATERIAL_BASE, ui_line)
     if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(user_value_name_material)):
         print('get_material_ui(): User value <{}> not exist, return None'.format(user_value_name_material))
         return None
@@ -210,8 +210,8 @@ def clear_table_ui():
     # delete user values
     i = 0
     while True:
-        user_value_name_color = '{}{:03d}'.format(USERVAL_NAME_COLOR_BASE, i + 1)
-        user_value_name_material = '{}{:03d}'.format(USERVAL_NAME_MATERIAL_BASE, i + 1)
+        user_value_name_color = '{}{:03d}'.format(h3dc.USERVAL_NAME_COLOR_BASE, i + 1)
+        user_value_name_material = '{}{:03d}'.format(h3dc.USERVAL_NAME_MATERIAL_BASE, i + 1)
         if lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(user_value_name_color)):
             lx.eval('!user.defDelete {}'.format(user_value_name_color))  # delete existing user value
         else:
@@ -227,8 +227,8 @@ def clear_table_ui():
 
 
 def build_line(ui_line, map_index, tags, materials, tags_materials_map):
-    user_value_name_color = '{}{:03d}'.format(USERVAL_NAME_COLOR_BASE, ui_line)
-    user_value_name_material = '{}{:03d}'.format(USERVAL_NAME_MATERIAL_BASE, ui_line)
+    user_value_name_color = '{}{:03d}'.format(h3dc.USERVAL_NAME_COLOR_BASE, ui_line)
+    user_value_name_material = '{}{:03d}'.format(h3dc.USERVAL_NAME_MATERIAL_BASE, ui_line)
     # make new user value
     lx.eval('user.defNew {} type:color life:temporary'.format(user_value_name_color))
     # set color for UI element
@@ -238,24 +238,24 @@ def build_line(ui_line, map_index, tags, materials, tags_materials_map):
     lx.eval('select.attr {{93645054749:sheet/{}}} set'.format(ui_line - 1))
     cur_line = lx.eval('select.attr ?')
     # select line source tag element
-    lx.eval('select.attr {{{}/{}}} set'.format(cur_line, SOURCE_TAG_ID))
+    lx.eval('select.attr {{{}/{}}} set'.format(cur_line, h3dc.SOURCE_TAG_ID))
     # assign tooltip to source tag element
     lx.eval('attr.tooltip "{}: {}"'.format(map_index, tags[map_index]))
     # materials dropbox setup
     materials_list_string = ';'.join(['{}'.format(x) for x in range(len(materials))])
     materials_listnames_string = ';'.join(materials)
-    lx.eval('user.def {} list "{}"'.format(USERVAL_NAME_MATERIAL_DEFAULT, materials_list_string))
-    lx.eval('user.def {} listnames "{}"'.format(USERVAL_NAME_MATERIAL_DEFAULT, materials_listnames_string))
+    lx.eval('user.def {} list "{}"'.format(h3dc.USERVAL_NAME_MATERIAL_DEFAULT, materials_list_string))
+    lx.eval('user.def {} listnames "{}"'.format(h3dc.USERVAL_NAME_MATERIAL_DEFAULT, materials_listnames_string))
     lx.eval('user.defNew {} type:integer life:temporary'.format(user_value_name_material))
     lx.eval('user.def {} list "{}"'.format(user_value_name_material, materials_list_string))
     lx.eval('user.def {} listnames "{}"'.format(user_value_name_material, materials_listnames_string))
     lx.eval('user.def {} attr:username value:{}'.format(user_value_name_material, tags[map_index]))
     h3du.set_user_value(user_value_name_material, tags_materials_map[map_index])
     # select line target material element and assign tooltip
-    lx.eval('select.attr {{{}/{}}} set'.format(cur_line, TARGET_TAG_ID))
+    lx.eval('select.attr {{{}/{}}} set'.format(cur_line, h3dc.TARGET_TAG_ID))
     lx.eval('attr.tooltip "select material to replace <{}> tag"'.format(tags[map_index]))
     # select line select polygons command and assign tooltip
-    lx.eval('select.attr {{{}/{}}} set'.format(cur_line, SELECT_TAG_ID))
+    lx.eval('select.attr {{{}/{}}} set'.format(cur_line, h3dc.SELECT_TAG_ID))
     lx.eval('attr.tooltip "select polygons for {} polygon tag"'.format(tags[map_index]))
 
 
@@ -272,7 +272,7 @@ def get_sel_color_index(tags):
     selected = modo.scene.current().selectedByType('mask')
     selected_colors = list()
     for mask in selected:
-        if not mask.name.startswith(COLOR_NAME_PREFIX):
+        if not mask.name.startswith(h3dc.COLOR_NAME_PREFIX):
             continue
         if mask.channel('ptyp') is None:
             continue
@@ -291,10 +291,10 @@ def get_sel_color_index(tags):
 
 def get_color_str_from_name(name_str):
     # print('name_str:<{}>'.format(name_str))
-    if COLOR_NAME_PREFIX not in name_str:
+    if h3dc.COLOR_NAME_PREFIX not in name_str:
         return name_str
-    start_pos = len(COLOR_NAME_PREFIX)
-    end_pos = name_str.find(MATERIAL_SUFFIX)
+    start_pos = len(h3dc.COLOR_NAME_PREFIX)
+    end_pos = name_str.find(h3dc.MATERIAL_SUFFIX)
     # no ' (Material)' suffix found
     if end_pos < 0:
         # set end_pos to last char if no ' (Material)' suffix
@@ -304,17 +304,17 @@ def get_color_str_from_name(name_str):
 
 
 def scan_init(tags, materials):
-    if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(USERVAL_NAME_OVERSIZE)):
-        lx.eval('user.defNew {} type:boolean life:temporary'.format(USERVAL_NAME_OVERSIZE))
+    if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(h3dc.USERVAL_NAME_OVERSIZE)):
+        lx.eval('user.defNew {} type:boolean life:temporary'.format(h3dc.USERVAL_NAME_OVERSIZE))
     if len(tags) - 1 <= PAGE_SIZE:
-        h3du.set_user_value(USERVAL_NAME_OVERSIZE, False)
+        h3du.set_user_value(h3dc.USERVAL_NAME_OVERSIZE, False)
     else:
-        h3du.set_user_value(USERVAL_NAME_OVERSIZE, True)
+        h3du.set_user_value(h3dc.USERVAL_NAME_OVERSIZE, True)
     set_page_start(tags=tags, start=1)
     tag_material_map = list()
-    if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(USERVAL_NAME_MATERIAL_DEFAULT)):
-        lx.eval('user.defNew {} type:integer life:temporary'.format(USERVAL_NAME_MATERIAL_DEFAULT))
-    h3du.set_user_value(USERVAL_NAME_MATERIAL_DEFAULT, 0)
+    if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(h3dc.USERVAL_NAME_MATERIAL_DEFAULT)):
+        lx.eval('user.defNew {} type:integer life:temporary'.format(h3dc.USERVAL_NAME_MATERIAL_DEFAULT))
+    h3du.set_user_value(h3dc.USERVAL_NAME_MATERIAL_DEFAULT, 0)
     # initiate tags_materials_map
     for i in range(1, len(tags)):
         # tag_material_map.append(i if i < materials_count else 0)
@@ -330,9 +330,9 @@ def scan_init(tags, materials):
     tag_material_map.insert(0, 0)  # for default material (tags[0]) assigned material is materials[0] (Default)
     # store tags_materials_map
     tags_materials_map_store_string = ';'.join(['{}'.format(x) for x in tag_material_map])  # compose string
-    if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(USERVAL_NAME_MAP_STORE)):
-        lx.eval('user.defNew {} type:string life:temporary'.format(USERVAL_NAME_MAP_STORE))
-    h3du.set_user_value(USERVAL_NAME_MAP_STORE, tags_materials_map_store_string)  # store to config
+    if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(h3dc.USERVAL_NAME_MAP_STORE)):
+        lx.eval('user.defNew {} type:string life:temporary'.format(h3dc.USERVAL_NAME_MAP_STORE))
+    h3du.set_user_value(h3dc.USERVAL_NAME_MAP_STORE, tags_materials_map_store_string)  # store to config
 
     return tag_material_map
 
@@ -344,11 +344,11 @@ def save_map(tags, materials, tags_materials_map):
         if color_id == 0:
             continue
         color_str = tags[color_id]
-        if not color_str.startswith(COLOR_NAME_PREFIX):
+        if not color_str.startswith(h3dc.COLOR_NAME_PREFIX):
             continue
-        color_str_num = color_str.replace(COLOR_NAME_PREFIX, '')
+        color_str_num = color_str.replace(h3dc.COLOR_NAME_PREFIX, '')
         material_str = materials[material_id]
-        if material_str.startswith(COLOR_NAME_PREFIX):
+        if material_str.startswith(h3dc.COLOR_NAME_PREFIX):
             continue
         tags_materials_line = '{} - {}\n'.format(color_str_num, material_str)
         map_lines.append(tags_materials_line)
@@ -403,7 +403,7 @@ def load_map(filename, tags, materials, tags_materials_map):
         color_str_num = ' '.join(list(
             s.strip().zfill(3) for s in color_str_num.split(' ') if s.strip() != ''
         ))
-        color_str = COLOR_NAME_PREFIX + color_str_num
+        color_str = h3dc.COLOR_NAME_PREFIX + color_str_num
         if color_str not in tags:
             # skip if no color found
             continue
@@ -433,17 +433,17 @@ def get_load_map_filename():
 
 
 def get_default_load_map_filename():
-    config_default_filename = h3du.get_user_value(USERVAL_NAME_DEF_MAP_PATH)
+    config_default_filename = h3du.get_user_value(h3dc.USERVAL_NAME_DEF_MAP_PATH)
     if os.path.exists(config_default_filename):
         print('default map table path:<{}>'.format(config_default_filename))
         return config_default_filename
     kits_path = lx.eval('query platformservice path.path ? kits')
-    default_filename = os.path.join(kits_path, KIT_NAME, KIT_SCRIPTS_NAME, MAP_DEFAULT_FILENAME)
+    default_filename = os.path.join(kits_path, h3dc.KIT_NAME, h3dc.KIT_SCRIPTS_NAME, h3dc.MAP_DEFAULT_FILENAME)
     if os.path.exists(default_filename):
         print('default map table path:<{}>'.format(default_filename))
         return default_filename
     lux_kits_path = kits_path.replace('\\Kits', '\\Luxology\\Kits')
-    default_filename = os.path.join(lux_kits_path, KIT_NAME, KIT_SCRIPTS_NAME, MAP_DEFAULT_FILENAME)
+    default_filename = os.path.join(lux_kits_path, h3dc.KIT_NAME, h3dc.KIT_SCRIPTS_NAME, h3dc.MAP_DEFAULT_FILENAME)
     if os.path.exists(default_filename):
         print('default map table path:<{}>'.format(default_filename))
         return default_filename
@@ -486,7 +486,7 @@ def apply_command(tags, materials, tags_materials_map):
 
 
 def get_float_color_str_from_mask(tag_name):
-    color_str = MISSING_COLOR
+    color_str = h3dc.MISSING_COLOR
     for mask in modo.scene.current().items(itype=c.MASK_TYPE):
         if mask.channel('ptyp') is None:
             continue
@@ -514,7 +514,7 @@ def select_polygons_by_tag(select_material_tag):
             continue
         if mask.channel('ptyp').get() != 'Material':
             continue
-        if mask.channel('ptag').get().replace(MATERIAL_SUFFIX, '') == select_material_tag:
+        if mask.channel('ptag').get().replace(h3dc.MATERIAL_SUFFIX, '') == select_material_tag:
             mask.select(replace=True)
             print('<{}> polygon tag selected'.format(select_material_tag))
             break
@@ -531,13 +531,13 @@ def main():
 
     # get remap table page size from config
     global PAGE_SIZE
-    PAGE_SIZE = h3du.get_user_value(USERVAL_NAME_PAGE_SIZE)
+    PAGE_SIZE = h3du.get_user_value(h3dc.USERVAL_NAME_PAGE_SIZE)
 
     run_mode = read_args()
     global_tags = get_tags_list(mode=run_mode)
     global_materials = get_materials_list(mode=run_mode, tags=global_tags)
     # clear previous table and user variables
-    if run_mode == RM_SCAN:
+    if run_mode == h3dc.RM_SCAN:
         global_tags_materials_map = scan_init(tags=global_tags, materials=global_materials)
         global_tags_materials_map = load_map(
             filename=get_default_load_map_filename(),
@@ -551,7 +551,7 @@ def main():
             tags_materials_map=global_tags_materials_map,
             start=get_page_start())
 
-    if run_mode == RM_PREV:
+    if run_mode == h3dc.RM_PREV:
         global_tags_materials_map = update_table(tags=global_tags, start=get_page_start())
         set_page_start(tags=global_tags, start=get_page_start() - PAGE_SIZE)
         display_table(
@@ -560,7 +560,7 @@ def main():
             tags_materials_map=global_tags_materials_map,
             start=get_page_start())
 
-    if run_mode == RM_NEXT:
+    if run_mode == h3dc.RM_NEXT:
         global_tags_materials_map = update_table(tags=global_tags, start=get_page_start())
         set_page_start(tags=global_tags, start=get_page_start() + PAGE_SIZE)
         display_table(
@@ -569,11 +569,11 @@ def main():
             tags_materials_map=global_tags_materials_map,
             start=get_page_start())
 
-    if run_mode == RM_SAVE:
+    if run_mode == h3dc.RM_SAVE:
         global_tags_materials_map = update_table(tags=global_tags, start=get_page_start())
         save_map(tags=global_tags, materials=global_materials, tags_materials_map=global_tags_materials_map)
 
-    if run_mode == RM_LOAD:
+    if run_mode == h3dc.RM_LOAD:
         global_tags_materials_map = update_table(tags=global_tags, start=get_page_start())
         global_tags_materials_map = load_map(
             filename=get_load_map_filename(),
@@ -586,14 +586,14 @@ def main():
             tags_materials_map=global_tags_materials_map,
             start=get_page_start())
 
-    if run_mode == RM_APPLY:
+    if run_mode == h3dc.RM_APPLY:
         # update table to get all changes from UI
         global_tags_materials_map = update_table(tags=global_tags, start=get_page_start())
         # assign mapped materials
         apply_command(tags=global_tags, materials=global_materials, tags_materials_map=global_tags_materials_map)
         # rescan scene to get updated state
-        global_tags = get_tags_list(mode=RM_SCAN)
-        global_materials = get_materials_list(mode=RM_SCAN, tags=global_tags)
+        global_tags = get_tags_list(mode=h3dc.RM_SCAN)
+        global_materials = get_materials_list(mode=h3dc.RM_SCAN, tags=global_tags)
         global_tags_materials_map = scan_init(tags=global_tags, materials=global_materials)
         display_table(
             tags=global_tags,
@@ -601,7 +601,7 @@ def main():
             tags_materials_map=global_tags_materials_map,
             start=set_page_start(start=1, tags=global_tags))
 
-    if run_mode == RM_SELECT:
+    if run_mode == h3dc.RM_SELECT:
         arg_mode, line_id_str = lx.args()
         line_id = int(line_id_str)
         tag_id = int(line_id) + get_page_start() - 1

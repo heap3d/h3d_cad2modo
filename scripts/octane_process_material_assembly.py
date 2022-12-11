@@ -19,7 +19,7 @@ import sys
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_utilites:}')))
 from h3d_utils import H3dUtils
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
-from h3d_kit_constants import *
+import h3d_kit_constants as h3dc
 
 
 def is_empty_assembly(item):
@@ -70,19 +70,19 @@ def process_render_settings():
     if not REND_SETUP:
         return
     # render settings setup
-    modo.scene.current().renderItem.channel('resX').set(RENDER_RESOLUTION)
-    modo.scene.current().renderItem.channel('resY').set(RENDER_RESOLUTION)
-    modo.scene.current().renderItem.channel('aa').set(RENDER_AA)
-    modo.scene.current().renderItem.channel('reflSmps').set(RENDER_SAMPLES)
-    modo.scene.current().renderItem.channel('coarseRate').set(RENDER_SHADER_RATE)
+    modo.scene.current().renderItem.channel('resX').set(h3dc.RENDER_RESOLUTION)
+    modo.scene.current().renderItem.channel('resY').set(h3dc.RENDER_RESOLUTION)
+    modo.scene.current().renderItem.channel('aa').set(h3dc.RENDER_AA)
+    modo.scene.current().renderItem.channel('reflSmps').set(h3dc.RENDER_SAMPLES)
+    modo.scene.current().renderItem.channel('coarseRate').set(h3dc.RENDER_SHADER_RATE)
     # turn environment important sampling on
     modo.scene.current().renderItem.channel('envSample').set(1)
     # turn irradiance caching off
     modo.scene.current().renderItem.channel('irrCache').set(0)
-    modo.scene.current().renderItem.channel('envRays').set(RENDER_SAMPLES)
+    modo.scene.current().renderItem.channel('envRays').set(h3dc.RENDER_SAMPLES)
     shaders = modo.scene.current().items(itype='defaultShader')
     for shader in shaders:
-        shader.channel('shadeRate').set(RENDER_SHADER_RATE)
+        shader.channel('shadeRate').set(h3dc.RENDER_SHADER_RATE)
 
 
 def process_lights():
@@ -213,17 +213,17 @@ def main():
 h3du = H3dUtils()
 
 # get user values from UI
-CAM_ROT_X = math.degrees(h3du.get_user_value(USER_VAL_CAM_ROT_X_NAME))
-CAM_ROT_Y = math.degrees(h3du.get_user_value(USER_VAL_CAM_ROT_Y_NAME))
-ENV_ROT_Y = math.degrees(h3du.get_user_value(USER_VAL_ENV_ROT_Y_NAME))
-ENV_PATH = h3du.get_user_value(USER_VAL_ENV_PATH_NAME)
-STORE_DIR = h3du.get_user_value(USER_VAL_STORE_DIR_NAME)
-SAVE_ENABLED = h3du.get_user_value(USER_VAL_SAVE_ENABLED_NAME)
-REND_SETUP = h3du.get_user_value(USER_VAL_REND_SETUP_NAME)
-OCTMAT_SETUP = h3du.get_user_value(USER_VAL_OCTMAT_SETUP_NAME)
-LIGHT_SETUP = h3du.get_user_value(USER_VAL_LIGHT_SETUP_NAME)
-CAM_SETUP = h3du.get_user_value(USER_VAL_CAM_SETUP_NAME)
-ENV_SETUP = h3du.get_user_value(USER_VAL_ENV_SETUP_NAME)
+CAM_ROT_X = math.degrees(h3du.get_user_value(h3dc.USER_VAL_CAM_ROT_X_NAME))
+CAM_ROT_Y = math.degrees(h3du.get_user_value(h3dc.USER_VAL_CAM_ROT_Y_NAME))
+ENV_ROT_Y = math.degrees(h3du.get_user_value(h3dc.USER_VAL_ENV_ROT_Y_NAME))
+ENV_PATH = h3du.get_user_value(h3dc.USER_VAL_ENV_PATH_NAME)
+STORE_DIR = h3du.get_user_value(h3dc.USER_VAL_STORE_DIR_NAME)
+SAVE_ENABLED = h3du.get_user_value(h3dc.USER_VAL_SAVE_ENABLED_NAME)
+REND_SETUP = h3du.get_user_value(h3dc.USER_VAL_REND_SETUP_NAME)
+OCTMAT_SETUP = h3du.get_user_value(h3dc.USER_VAL_OCTMAT_SETUP_NAME)
+LIGHT_SETUP = h3du.get_user_value(h3dc.USER_VAL_LIGHT_SETUP_NAME)
+CAM_SETUP = h3du.get_user_value(h3dc.USER_VAL_CAM_SETUP_NAME)
+ENV_SETUP = h3du.get_user_value(h3dc.USER_VAL_ENV_SETUP_NAME)
 
 if __name__ == '__main__':
     main()

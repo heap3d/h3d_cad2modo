@@ -22,7 +22,8 @@ def get_materials_from_masks(masks):
 
 
 def main():
-    rgb_colors_str = {}  # set of unique colors
+    # set of unique colors
+    rgb_colors_str = {}
     material_name_prefix = '#color# '
     is_int_colors = False
 
@@ -35,47 +36,58 @@ def main():
         material_masks = modo.scene.current().items(itype=c.MASK_TYPE)
     materials = get_materials_from_masks(material_masks)
     for material in materials:
-        color_red = material.channel('diffCol.R').get()  # read diffuse color values
-        color_green = material.channel('diffCol.G').get()  # read diffuse color values
-        color_blue = material.channel('diffCol.B').get()  # read diffuse color values
+        # read diffuse color values
+        color_red = material.channel('diffCol.R').get()
+        # read diffuse color values
+        color_green = material.channel('diffCol.G').get()
+        # read diffuse color values
+        color_blue = material.channel('diffCol.B').get()
         if isinstance(color_red, int):
-            is_int_colors = True  # check if values is in integer format
+            # check if values is in integer format
+            is_int_colors = True
         elif isinstance(color_red, float):
-            is_int_colors = False  # check if values is in float format
+            # check if values is in float format
+            is_int_colors = False
         else:
             print('Error color value type. Switch to <int> or <float>. Exit')
             exit()
         if is_int_colors:
+            # write color string in integer format
             color_name = '{} {} {}'.format(
                 str(color_red).zfill(3),
                 str(color_green).zfill(3),
                 str(color_blue).zfill(3)
-            )  # write color string in integer format
+            )
         else:
             color_name = '{} {} {}'.format(
                 str(int(color_red * 255 + 0.5)).zfill(3),
                 str(int(color_green * 255 + 0.5)).zfill(3),
-                str(int(color_blue * 255 + 0.5)).zfill(3)  # write color string float to integer converted
+                # write color string float to integer converted
+                str(int(color_blue * 255 + 0.5)).zfill(3)
             )
         if material.parent is None:
             continue
-        channel = material.parent.channel('ptyp')  # check if ptyp is not None
+        # check if ptyp is not None
+        channel = material.parent.channel('ptyp')
         if channel is None:
             continue
-        if material.parent.channel('ptyp').get() != 'Material':  # check if ptyp is set to Material
+        # check if ptyp is set to Material
+        if material.parent.channel('ptyp').get() != 'Material':
             continue
-        ptag = material.parent.channel('ptag').get()  # get ptag
+        # get ptag
+        ptag = material.parent.channel('ptag').get()
         if ptag == '':
             continue
         if not (color_name in rgb_colors_str):
-            rgb_colors_str[color_name] = set()  # set of ptag's for specific color
+            # set of ptag's for specific color
+            rgb_colors_str[color_name] = set()
         rgb_colors_str[color_name].add(ptag)
 
     # convert ptag sets into polygon selection sets
     for color_str in rgb_colors_str:
         modo.scene.current().deselect()
-        # lx.eval('item.componentMode polygon true')  # enter polygon mode
-        lx.eval('select.drop polygon')  # drop polygon selection
+        # drop polygon selection
+        lx.eval('select.drop polygon')
         for ptag in rgb_colors_str[color_str]:
             for mask in modo.scene.current().items(itype='mask'):
                 if mask.channel('ptyp') is None:
@@ -86,21 +98,23 @@ def main():
                     continue
                 if mask.channel('ptag').get() == ptag:
                     mask.select()
-        lx.eval('material.selectPolygons')  # select poly by material
-        lx.eval('select.editSet "{}" add'.format(color_str))  # create polygon selection set
+        # select poly by material
+        lx.eval('material.selectPolygons')
+        # create polygon selection set
+        lx.eval('select.editSet "{}" add'.format(color_str))
 
     modo.scene.current().deselect()
-    lx.eval('item.componentMode polygon false')  # enter item mode
+    # enter item mode
+    lx.eval('item.componentMode polygon false')
     # select all meshes
     for item in modo.scene.current().items(itype=c.MESH_TYPE):
         item.select()
     # enter polygon mode
-    lx.eval('item.componentMode polygon true')  # enter polygon mode
+    lx.eval('item.componentMode polygon true')
     # assign new material for valid colors
     for color_str in rgb_colors_str:
-        # select selection set
-        print('color_str: <{}>'.format(color_str))
-        lx.eval('select.pickWorkingSet "{}" true'.format(color_str))  # select polygon selection set
+        # select polygon selection set
+        lx.eval('select.pickWorkingSet "{}" true'.format(color_str))
         # assign material
         str_r, str_g, str_b = color_str.split()
         try:
@@ -117,19 +131,21 @@ def main():
             print('<{}> :: color string error'.format(color_str))
             continue
         if is_int_colors:
+            # assign material with INTEGER values
             lx.eval('poly.setMaterial "{}" {{{} {} {}}} 0.8 0.04 true false'.format(
                 material_name_prefix+color_str,
                 col_r,
                 col_g,
                 col_b)
-            )  # assign material with INTEGER values
+            )
         else:
+            # assign material with FLOAT values
             lx.eval('poly.setMaterial "{}" {{{} {} {}}} 0.8 0.04 true false'.format(
                 material_name_prefix+color_str,
                 col_r/255.0,
                 col_g/255.0,
                 col_b/255.0)
-            )  # assign material with FLOAT values
+            )
 
     # create list of material mask items to remove
     remove_list = set()

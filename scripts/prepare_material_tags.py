@@ -15,7 +15,7 @@ import sys
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_utilites:}')))
 from h3d_utils import H3dUtils
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
-from h3d_kit_constants import *
+import h3d_kit_constants as h3dc
 
 
 def get_materials():
@@ -24,7 +24,7 @@ def get_materials():
 
 
 def rename_material(mask):
-    if mask.name.startswith(COLOR_NAME_PREFIX):
+    if mask.name.startswith(h3dc.COLOR_NAME_PREFIX):
         return
     if mask.channel('ptyp') is None:
         return
@@ -33,7 +33,7 @@ def rename_material(mask):
     if mask.channel('ptag').get() == '':
         return
     tag_name = mask.channel('ptag').get()
-    lx.eval('poly.renameMaterial "{}" "{}"'.format(tag_name, '{}{}'.format(COLOR_NAME_PREFIX, tag_name)))
+    lx.eval('poly.renameMaterial "{}" "{}"'.format(tag_name, '{}{}'.format(h3dc.COLOR_NAME_PREFIX, tag_name)))
 
 
 def main():

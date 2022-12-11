@@ -16,7 +16,7 @@ import sys
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_utilites:}')))
 from h3d_utils import H3dUtils
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
-from h3d_kit_constants import *
+import h3d_kit_constants as h3dc
 
 
 def save_solo_mesh_as_mesh_assembly_preset(mesh):
@@ -79,7 +79,7 @@ def main():
 
 
 h3du = H3dUtils()
-REFLIB_DIR = h3du.get_user_value(USER_VAL_REFLIB_DIR_NAME)
+REFLIB_DIR = h3du.get_user_value(h3dc.USER_VAL_REFLIB_DIR_NAME)
 
 if __name__ == '__main__':
     main()
