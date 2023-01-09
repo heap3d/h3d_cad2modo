@@ -12,7 +12,7 @@ import modo
 import sys
 
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_utilites:}')))
-from h3d_utils import H3dUtils
+import h3d_utils as h3du
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
 import h3d_kit_constants as h3dc
 
@@ -25,8 +25,6 @@ def main():
     if dialog_result:
         h3du.set_user_value(h3dc.USERVAL_NAME_DEF_MAP_PATH, dialog_result)
 
-
-h3du = H3dUtils()
 
 if __name__ == '__main__':
     main()

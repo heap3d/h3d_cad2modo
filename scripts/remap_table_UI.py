@@ -15,7 +15,7 @@ import modo.constants as c
 import sys
 
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_utilites:}')))
-from h3d_utils import H3dUtils
+import h3d_utils as h3du
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
 import h3d_kit_constants as h3dc
 
@@ -609,8 +609,6 @@ def main():
 
     print('done.')
 
-
-h3du = H3dUtils()
 
 if __name__ == '__main__':
     PAGE_SIZE = 0

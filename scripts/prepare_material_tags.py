@@ -13,14 +13,18 @@ import modo.constants as c
 import sys
 
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_utilites:}')))
-from h3d_utils import H3dUtils
+import h3d_utils as h3du
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
 import h3d_kit_constants as h3dc
 
 
 def get_materials():
-    return [i for i in modo.scene.current().items(itype=c.MASK_TYPE)
-            if i.parent.type == h3du.type_int_to_str(c.POLYRENDER_TYPE)]
+    if not modo.Scene().selectedByType(itype=c.MASK_TYPE):
+        return [i for i in modo.Scene().items(itype=c.MASK_TYPE)
+                if i.parent.type == h3du.itype_str(c.POLYRENDER_TYPE)]
+    else:
+        return [i for i in modo.Scene().selectedByType(itype=c.MASK_TYPE)
+                if i.parent.type == h3du.itype_str(c.POLYRENDER_TYPE)]
 
 
 def rename_material(mask):
@@ -46,8 +50,6 @@ def main():
         rename_material(mask)
     print('done.')
 
-
-h3du = H3dUtils()
 
 if __name__ == '__main__':
     main()

@@ -14,7 +14,7 @@ import sys
 sys.path.append(
     "{}\\scripts".format(lx.eval("query platformservice alias ? {kit_h3d_utilites:}"))
 )
-from h3d_utils import H3dUtils
+import h3d_utils as h3du
 
 sys.path.append(
     "{}\\scripts".format(lx.eval("query platformservice alias ? {kit_h3d_cad2modo:}"))
@@ -32,8 +32,6 @@ def main():
     if dialog_result:
         h3du.set_user_value(h3dc.USER_VAL_STORE_DIR_NAME, dialog_result)
 
-
-h3du = H3dUtils()
 
 if __name__ == "__main__":
     main()
