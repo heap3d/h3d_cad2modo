@@ -229,10 +229,12 @@ def main():
     print('')
     print('start...')
 
-    material_masks = modo.scene.current().selectedByType(itype=c.MASK_TYPE)
-    h3dd.print_items(material_masks, 'material_masks selected:')
+    SELECTED_MODE = 'selected' in lx.args()
 
-    if not material_masks:
+    if SELECTED_MODE:
+        material_masks = modo.scene.current().selectedByType(itype=c.MASK_TYPE)
+        h3dd.print_items(material_masks, 'material_masks selected:')
+    else:
         material_masks = modo.scene.current().items(itype=c.MASK_TYPE)
         h3dd.print_items(material_masks, 'material_masks scene:')
 
@@ -258,15 +260,16 @@ def main():
     # assign new material for valid colors
     assign_materials(rgb_colors_str)
 
-    # create list of material mask items to remove
-    remove_list = get_masks_with_item_tag(modo.scene.current().items(itype=c.MASK_TYPE))
-    h3dd.print_items(remove_list, 'remove_list:')
-    # remove material mask items in the list
-    h3dd.print_debug('remove_list items deletion...')
-    for item in remove_list:
-        # modo.scene.current().removeItems(itm=item, children=True)
-        h3du.remove_if_exist(item, children=True)
-    h3dd.print_debug('remove_list items deleted')
+    if not SELECTED_MODE:
+        # create list of material mask items to remove
+        remove_list = get_masks_with_item_tag(modo.scene.current().items(itype=c.MASK_TYPE))
+        h3dd.print_items(remove_list, 'remove_list:')
+        # remove material mask items in the list
+        h3dd.print_debug('remove_list items deletion...')
+        for item in remove_list:
+            # modo.scene.current().removeItems(itm=item, children=True)
+            h3du.remove_if_exist(item, children=True)
+        h3dd.print_debug('remove_list items deleted')
 
     # h3dd.print_debug('debug exit')
     # return

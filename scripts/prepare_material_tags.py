@@ -18,12 +18,12 @@ sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit
 import h3d_kit_constants as h3dc
 
 
-def get_materials():
-    if not modo.Scene().selectedByType(itype=c.MASK_TYPE):
-        return [i for i in modo.Scene().items(itype=c.MASK_TYPE)
+def get_materials(selected):
+    if selected:
+        return [i for i in modo.Scene().selectedByType(itype=c.MASK_TYPE)
                 if i.parent.type == h3du.itype_str(c.POLYRENDER_TYPE)]
     else:
-        return [i for i in modo.Scene().selectedByType(itype=c.MASK_TYPE)
+        return [i for i in modo.Scene().items(itype=c.MASK_TYPE)
                 if i.parent.type == h3du.itype_str(c.POLYRENDER_TYPE)]
 
 
@@ -42,12 +42,18 @@ def rename_material(mask):
 
 def main():
     print('start...')
-    materials = get_materials()
+
+    SELECTED_MODE = 'selected' in lx.args()
+
+    materials = get_materials(SELECTED_MODE)
+
     meshes = modo.scene.current().meshes
     for mesh in meshes:
         mesh.select()
+
     for mask in materials:
         rename_material(mask)
+
     print('done.')
 
 
