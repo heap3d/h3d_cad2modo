@@ -19,6 +19,7 @@ from h3d_exceptions import H3dExitException
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
 import h3d_kit_constants as h3dc
 from prepare_material_tags import rename_material
+from ptag_to_selection_set import ptag_to_selection_set
 
 
 def get_materials_from_masks(masks):
@@ -81,54 +82,54 @@ def collect_unique_ptags_by_color(materials):
     return rgb_colors_str
 
 
-def ptag_to_selection_set(rgb_color_strings):
-    h3dd.print_debug('>>>> ptag_to_selection_set() IN:')
-    h3dd.indent_inc()
-    # convert ptag sets into polygon selection sets
-    for color_str in rgb_color_strings:
-        h3dd.print_debug('color_str <{}>'.format(color_str))
-        # modo.scene.current().deselect()
-        lx.eval('select.drop item')
+# def ptag_to_selection_set(rgb_color_strings, prefix_to_ignore):
+#     h3dd.print_debug('>>>> ptag_to_selection_set() IN:')
+#     h3dd.indent_inc()
+#     # convert ptag sets into polygon selection sets
+#     for color_str in rgb_color_strings:
+#         h3dd.print_debug('color_str <{}>'.format(color_str))
+#         # modo.scene.current().deselect()
+#         lx.eval('select.drop item')
 
-        # drop polygon selection
-        lx.eval('select.drop polygon')
+#         # drop polygon selection
+#         lx.eval('select.drop polygon')
 
-        for ptag in rgb_color_strings[color_str]:
-            h3dd.print_debug('ptag: <{}>'.format(ptag), 1)
-            for mask in modo.scene.current().items(itype='mask'):
-                # h3dd.print_debug('mask: <{}>'.format(mask.name), 2)
-                if mask.channel('ptyp') is None:
-                    # h3dd.print_debug('- skipped: ptyp is None', 3)
-                    continue
+#         for ptag in rgb_color_strings[color_str]:
+#             h3dd.print_debug('ptag: <{}>'.format(ptag), 1)
+#             for mask in modo.scene.current().items(itype='mask'):
+#                 # h3dd.print_debug('mask: <{}>'.format(mask.name), 2)
+#                 if mask.channel('ptyp') is None:
+#                     # h3dd.print_debug('- skipped: ptyp is None', 3)
+#                     continue
 
-                if mask.channel('ptyp').get() != 'Material':
-                    # h3dd.print_debug('- skipped: ptyp != Material', 3)
-                    continue
+#                 if mask.channel('ptyp').get() != 'Material':
+#                     # h3dd.print_debug('- skipped: ptyp != Material', 3)
+#                     continue
 
-                if str(mask.name).startswith(h3dc.COLOR_NAME_PREFIX):
-                    # h3dd.print_debug('- skipped: mask.name sart with color prefix', 3)
-                    continue
+#                 if str(mask.name).startswith(prefix_to_ignore):
+#                     # h3dd.print_debug('- skipped: mask.name sart with color prefix', 3)
+#                     continue
 
-                if mask.channel('ptag').get() != ptag:
-                    # h3dd.print_debug('- skipped: ptag <{}> not equal to <{}>'.format(mask.channel('ptag').get(), ptag), 3)
-                    continue
+#                 if mask.channel('ptag').get() != ptag:
+#                     # h3dd.print_debug('- skipped: ptag <{}> not equal to <{}>'.format(mask.channel('ptag').get(), ptag), 3)
+#                     continue
 
-                mask.select()
-                # lx.eval('select.subItem {} set'.format(mask.id))
-                # lx.eval('select.type item')
-                # lx.eval('material.selectPolygons')
-                # h3dd.print_debug('mask: <{}>'.format(mask.name), 2)
-                # h3dd.print_debug('select mask.', 2)
-                # lx.eval('select.editSet "{}" add'.format(color_str))
+#                 mask.select()
+#                 # lx.eval('select.subItem {} set'.format(mask.id))
+#                 # lx.eval('select.type item')
+#                 # lx.eval('material.selectPolygons')
+#                 # h3dd.print_debug('mask: <{}>'.format(mask.name), 2)
+#                 # h3dd.print_debug('select mask.', 2)
+#                 # lx.eval('select.editSet "{}" add'.format(color_str))
 
-        # select poly by material
-        lx.eval('material.selectPolygons')
-        h3dd.exit('debug exit: ptag_to_selection_set() first loop. one loop. material.selectPolygons')
-        # create polygon selection set
-        # lx.eval('select.editSet "{}" add'.format(color_str))
+#         # select poly by material
+#         lx.eval('material.selectPolygons')
+#         h3dd.exit('debug exit: ptag_to_selection_set() first loop. one loop. material.selectPolygons')
+#         # create polygon selection set
+#         # lx.eval('select.editSet "{}" add'.format(color_str))
 
-    h3dd.indent_dec()
-    h3dd.print_debug('<<<< ptag_to_selection_set() OUT:')
+#     h3dd.indent_dec()
+#     h3dd.print_debug('<<<< ptag_to_selection_set() OUT:')
 
 
 def assign_materials(rgb_colors_str):
@@ -297,7 +298,7 @@ def main():
 
     # convert ptag sets into polygon selection sets
     # h3dd.exit('debug exit: test pre ptag_to_selection_set() state')
-    ptag_to_selection_set(rgb_color_strings)
+    ptag_to_selection_set(rgb_color_strings, h3dc.COLOR_NAME_PREFIX)
     h3dd.exit('debug exit: test post ptag_to_selection_set() state')
 
     # enter polygon mode
