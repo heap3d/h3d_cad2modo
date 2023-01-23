@@ -82,58 +82,16 @@ def collect_unique_ptags_by_color(materials):
     return rgb_colors_str
 
 
-# def ptag_to_selection_set(rgb_color_strings, prefix_to_ignore):
-#     h3dd.print_debug('>>>> ptag_to_selection_set() IN:')
-#     h3dd.indent_inc()
-#     # convert ptag sets into polygon selection sets
-#     for color_str in rgb_color_strings:
-#         h3dd.print_debug('color_str <{}>'.format(color_str))
-#         # modo.scene.current().deselect()
-#         lx.eval('select.drop item')
-
-#         # drop polygon selection
-#         lx.eval('select.drop polygon')
-
-#         for ptag in rgb_color_strings[color_str]:
-#             h3dd.print_debug('ptag: <{}>'.format(ptag), 1)
-#             for mask in modo.scene.current().items(itype='mask'):
-#                 # h3dd.print_debug('mask: <{}>'.format(mask.name), 2)
-#                 if mask.channel('ptyp') is None:
-#                     # h3dd.print_debug('- skipped: ptyp is None', 3)
-#                     continue
-
-#                 if mask.channel('ptyp').get() != 'Material':
-#                     # h3dd.print_debug('- skipped: ptyp != Material', 3)
-#                     continue
-
-#                 if str(mask.name).startswith(prefix_to_ignore):
-#                     # h3dd.print_debug('- skipped: mask.name sart with color prefix', 3)
-#                     continue
-
-#                 if mask.channel('ptag').get() != ptag:
-#                     # h3dd.print_debug('- skipped: ptag <{}> not equal to <{}>'.format(mask.channel('ptag').get(), ptag), 3)
-#                     continue
-
-#                 mask.select()
-#                 # lx.eval('select.subItem {} set'.format(mask.id))
-#                 # lx.eval('select.type item')
-#                 # lx.eval('material.selectPolygons')
-#                 # h3dd.print_debug('mask: <{}>'.format(mask.name), 2)
-#                 # h3dd.print_debug('select mask.', 2)
-#                 # lx.eval('select.editSet "{}" add'.format(color_str))
-
-#         # select poly by material
-#         lx.eval('material.selectPolygons')
-#         h3dd.exit('debug exit: ptag_to_selection_set() first loop. one loop. material.selectPolygons')
-#         # create polygon selection set
-#         # lx.eval('select.editSet "{}" add'.format(color_str))
-
-#     h3dd.indent_dec()
-#     h3dd.print_debug('<<<< ptag_to_selection_set() OUT:')
-
-
 def assign_materials(rgb_colors_str):
-    # [ ] FIXME no polygon selection sets created
+    # select all meshes
+    meshes = modo.Scene().items(itype=c.MESH_TYPE)
+    modo.Scene().deselect()
+    for mesh in meshes:
+        mesh.select()
+
+    # enter polygon mode
+    lx.eval('select.type polygon')
+
     # assign new material for valid colors
     for color_str in rgb_colors_str:
         # select polygon selection set
@@ -247,6 +205,11 @@ def get_duplicated_color_masks(masks):
     return duplicated_masks
 
 
+def is_protected(mask):
+    # [ ] TODO check if protected
+    return False
+
+
 def main():
     print('')
     print('start...')
@@ -270,19 +233,25 @@ def main():
         validated_simple_masks.add(mask)
 
     # get duplicated_simple_masks
-    duplicated_simple_masks = get_duplicated_color_masks(validated_simple_masks)
+    # duplicated_simple_masks = get_duplicated_color_masks(validated_simple_masks)
 
     # get unique_simple_masks
-    unique_simple_masks = validated_simple_masks - duplicated_simple_masks
-    # add color pefix to unique simple masks
-    for mask in unique_simple_masks:
-        rename_material(mask)
+    # unique_simple_masks = validated_simple_masks - duplicated_simple_masks
+    # # add color pefix to unique simple masks
+    # for mask in unique_simple_masks:
+    #     rename_material(mask)
+
+    # materials = get_materials_from_masks(duplicated_simple_masks)
+    # rgb_color_strings = collect_unique_ptags_by_color(materials)
+    # ptag_to_selection_set(rgb_color_strings, h3dc.COLOR_NAME_PREFIX)
+
+    # h3dd.exit('debug exit: ptag to selection sets')
 
     # ---------- process duplicated materials ----------
 
     # get materials from material_masks
-    h3dd.print_items(duplicated_simple_masks, 'duplicated_simple_masks <{}>:'.format(len(duplicated_simple_masks)))
-    materials = get_materials_from_masks(duplicated_simple_masks)
+    h3dd.print_items(validated_simple_masks, 'validated_simple_masks <{}>:'.format(len(validated_simple_masks)))
+    materials = get_materials_from_masks(validated_simple_masks)
     h3dd.print_items(materials, 'materials <{}>:'.format(len(materials)))
 
     # collect unique colors into rgb_color_str set of ptag sets
@@ -297,34 +266,26 @@ def main():
         item.select()
 
     # convert ptag sets into polygon selection sets
-    # h3dd.exit('debug exit: test pre ptag_to_selection_set() state')
     ptag_to_selection_set(rgb_color_strings, h3dc.COLOR_NAME_PREFIX)
-    h3dd.exit('debug exit: test post ptag_to_selection_set() state')
 
-    # enter polygon mode
-    lx.eval('select.type polygon')
     # assign new material for valid colors
     assign_materials(rgb_color_strings)
 
     # create list of material mask items to remove
     remove_list = set()
-    remove_list.update(duplicated_simple_masks)
+    remove_list.update(validated_simple_masks)
+    h3dd.print_items(remove_list, 'remove_list:')
+    # h3dd.exit('debug exit: materials assigned. before deleting item masks')
     item_masks = get_masks_with_item_tag(modo.scene.current().items(itype=c.MASK_TYPE))
+    h3dd.print_items(item_masks, 'item_masks:')
     # add item masks to remove_list if no used materials in there
     for item_mask in item_masks:
-        is_protected = False
-        for mask in item_mask.children():
-            if not is_simple_mask(mask):
-                is_protected = True
-                break
-            if mask not in validated_simple_masks:
-                is_protected = True
-                break
-        if is_protected:
+        if is_protected(item_mask):
             continue
         remove_list.add(item_mask)
 
     # remove material mask items in the list
+    h3dd.print_items(remove_list, 'remove_list:')
     for item in remove_list:
         # modo.scene.current().removeItems(itm=item, children=True)
         h3du.remove_if_exist(item, children=True)
