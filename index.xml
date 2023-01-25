@@ -8,6 +8,7 @@
 		<source target="h3d_cad2modo/scripts/octane_process_material_assembly.py">scripts/octane_process_material_assembly.py</source>
 		<source target="h3d_cad2modo/scripts/octane_save_mesh_assembly_preset.py">scripts/octane_save_mesh_assembly_preset.py</source>
 		<source target="h3d_cad2modo/scripts/prepare_material_tags.py">scripts/prepare_material_tags.py</source>
+		<source target="h3d_cad2modo/scripts/ptag_to_selection_set.py">scripts/ptag_to_selection_set.py</source>
 		<source target="h3d_cad2modo/scripts/remap_table_UI.py">scripts/remap_table_UI.py</source>
 		<source target="h3d_cad2modo/scripts/RGB - Materials Default.txt">scripts/RGB - Materials Default.txt</source>
 		<source target="h3d_cad2modo/scripts/set_def_map_path.py">scripts/set_def_map_path.py</source>

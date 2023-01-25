@@ -18,7 +18,6 @@ from h3d_debug import H3dDebug
 from h3d_exceptions import H3dExitException
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
 import h3d_kit_constants as h3dc
-from prepare_material_tags import rename_material
 from ptag_to_selection_set import ptag_to_selection_set
 
 
@@ -80,52 +79,6 @@ def collect_unique_ptags_by_color(materials):
         rgb_colors_str[color_name].add(ptag)
 
     return rgb_colors_str
-
-
-def assign_materials(rgb_colors_str):
-    # select all meshes
-    meshes = modo.Scene().items(itype=c.MESH_TYPE)
-    modo.Scene().deselect()
-    for mesh in meshes:
-        mesh.select()
-
-    # enter polygon mode
-    lx.eval('select.type polygon')
-
-    # assign new material for valid colors
-    for color_str in rgb_colors_str:
-        # select polygon selection set
-        h3dd.print_debug('assign_materials: <{}>'.format(color_str))
-        lx.eval('select.pickWorkingSet "{}" true'.format(color_str))
-
-        # assign material
-        str_r, str_g, str_b = color_str.split()
-
-        try:
-            col_r = int(str_r)
-            col_g = int(str_g)
-            col_b = int(str_b)
-
-            if col_r < 0 or col_r > 255:
-                raise ValueError('RGB R value out of 0..255 range')
-
-            if col_g < 0 or col_g > 255:
-                raise ValueError('RGB G value out of 0..255 range')
-
-            if col_b < 0 or col_b > 255:
-                raise ValueError('RGB B value out of 0..255 range')
-
-        except ValueError:
-            print('<{}> :: color string error'.format(color_str))
-            continue
-
-        # assign material with FLOAT values
-        lx.eval('poly.setMaterial "{}" {{{} {} {}}} 0.8 0.04 true false'.format(
-            h3dc.COLOR_NAME_PREFIX+color_str,
-            col_r/255.0,
-            col_g/255.0,
-            col_b/255.0)
-        )
 
 
 def get_masks_with_item_tag(masks):
@@ -199,28 +152,21 @@ def get_duplicated_color_masks(masks):
         if color_str not in color_strings:
             color_strings[color_str] = 0
         color_strings[color_str] += 1
+
         if color_strings[color_str] > 1:
             duplicated_masks.add(mask)
 
     return duplicated_masks
 
 
-def is_protected(mask):
-    # [ ] TODO check if protected
+def is_protected(mask, validated_masks):
+    children_masks = mask.childrenByType(itype=c.MASK_TYPE)
+    if not all(mask in validated_masks for mask in children_masks):
+        return True
     return False
 
 
-def main():
-    print('')
-    print('start...')
-
-    initial_masks = get_scene_masks()
-
-    # get simple_masks
-    simple_masks = set([mask for mask in initial_masks
-                        if is_simple_mask(mask) and not has_color_prefix(mask, h3dc.COLOR_NAME_PREFIX)])
-
-    # get validated_simple_masks
+def get_validated_simple_masks(simple_masks):
     validated_simple_masks = set()
     for mask in simple_masks:
         siblings = get_siblings(mask)
@@ -232,62 +178,112 @@ def main():
             continue
         validated_simple_masks.add(mask)
 
-    # get duplicated_simple_masks
-    # duplicated_simple_masks = get_duplicated_color_masks(validated_simple_masks)
+    return validated_simple_masks
 
-    # get unique_simple_masks
-    # unique_simple_masks = validated_simple_masks - duplicated_simple_masks
-    # # add color pefix to unique simple masks
-    # for mask in unique_simple_masks:
-    #     rename_material(mask)
 
-    # materials = get_materials_from_masks(duplicated_simple_masks)
-    # rgb_color_strings = collect_unique_ptags_by_color(materials)
-    # ptag_to_selection_set(rgb_color_strings, h3dc.COLOR_NAME_PREFIX)
+def get_ptags(masks):
+    ptags = set()
+    for mask in masks:
+        ptags.add(mask.channel('ptag').get())
 
-    # h3dd.exit('debug exit: ptag to selection sets')
+    return ptags
 
-    # ---------- process duplicated materials ----------
 
-    # get materials from material_masks
-    h3dd.print_items(validated_simple_masks, 'validated_simple_masks <{}>:'.format(len(validated_simple_masks)))
-    materials = get_materials_from_masks(validated_simple_masks)
-    h3dd.print_items(materials, 'materials <{}>:'.format(len(materials)))
-
-    # collect unique colors into rgb_color_str set of ptag sets
-    rgb_color_strings = collect_unique_ptags_by_color(materials)
-    h3dd.print_items(rgb_color_strings, 'rgb_color_strings <{}>:'.format(len(rgb_color_strings)))
-
+def assign_new_materials(rgb_color_strings, duplicated_ptags):
+    # select all mesh items and enter polygon mode to using selection sets
     modo.scene.current().deselect()
     # enter item mode
     lx.eval('select.type item')
     # select all meshes
     for item in modo.scene.current().items(itype=c.MESH_TYPE):
         item.select()
+    # enter polygon mode
+    lx.eval('select.type polygon')
+
+    for rgb_str in rgb_color_strings:
+        ptags = rgb_color_strings[rgb_str]
+
+        lx.eval('select.pickWorkingSet "{}" true'.format(rgb_str))
+
+        str_r, str_g, str_b = rgb_str.split()
+
+        try:
+            col_r = int(str_r)
+            col_g = int(str_g)
+            col_b = int(str_b)
+
+            if col_r < 0 or col_r > 255:
+                raise ValueError('RGB R value out of 0..255 range')
+
+            if col_g < 0 or col_g > 255:
+                raise ValueError('RGB G value out of 0..255 range')
+
+            if col_b < 0 or col_b > 255:
+                raise ValueError('RGB B value out of 0..255 range')
+
+        except ValueError:
+            print('<{}> :: color string error'.format(rgb_str))
+            continue
+
+        # set color_base_name to rgb_str if any of rgb_str's ptags is in duplicated_ptags, to ptag otherwise
+        if len(duplicated_ptags) > len(rgb_color_strings):
+            color_base_name = rgb_str
+        else:
+            color_base_name = ptags.pop()
+
+        # assign material with FLOAT values
+        lx.eval('poly.setMaterial "{}" {{{} {} {}}} 0.8 0.04 true false'.format(
+            h3dc.COLOR_NAME_PREFIX + color_base_name,
+            col_r/255.0,
+            col_g/255.0,
+            col_b/255.0)
+        )
+
+
+def main():
+    print('')
+    print('start...')
+
+    initial_masks = get_scene_masks()
+
+    # get simple_masks
+    simple_masks = {mask for mask in initial_masks
+                    if is_simple_mask(mask) and not has_color_prefix(mask, h3dc.COLOR_NAME_PREFIX)}
+
+    # get validated_simple_masks
+    validated_simple_masks = get_validated_simple_masks(simple_masks)
+
+    # # get duplicated_simple_masks
+    duplicated_simple_masks = get_duplicated_color_masks(validated_simple_masks)
+
+    # get materials from material_masks
+    materials = get_materials_from_masks(validated_simple_masks)
+
+    # collect unique colors into rgb_color_str set of ptag sets
+    rgb_color_strings = collect_unique_ptags_by_color(materials)
 
     # convert ptag sets into polygon selection sets
     ptag_to_selection_set(rgb_color_strings, h3dc.COLOR_NAME_PREFIX)
 
+    # get duplicated ptags
+    duplicated_ptags = get_ptags(duplicated_simple_masks)
+
     # assign new material for valid colors
-    assign_materials(rgb_color_strings)
+    assign_new_materials(rgb_color_strings, duplicated_ptags)
 
     # create list of material mask items to remove
     remove_list = set()
     remove_list.update(validated_simple_masks)
-    h3dd.print_items(remove_list, 'remove_list:')
-    # h3dd.exit('debug exit: materials assigned. before deleting item masks')
     item_masks = get_masks_with_item_tag(modo.scene.current().items(itype=c.MASK_TYPE))
-    h3dd.print_items(item_masks, 'item_masks:')
+
     # add item masks to remove_list if no used materials in there
     for item_mask in item_masks:
-        if is_protected(item_mask):
+        if is_protected(item_mask, validated_simple_masks):
             continue
         remove_list.add(item_mask)
 
     # remove material mask items in the list
-    h3dd.print_items(remove_list, 'remove_list:')
     for item in remove_list:
-        # modo.scene.current().removeItems(itm=item, children=True)
         h3du.remove_if_exist(item, children=True)
 
     lx.eval('select.type item')
@@ -296,7 +292,7 @@ def main():
 
 
 log_name = h3du.replace_file_ext(modo.scene.current().name)
-h3dd = H3dDebug(enable=True, file=log_name)
+h3dd = H3dDebug(enable=False, file=log_name)
 
 color_mode = None
 

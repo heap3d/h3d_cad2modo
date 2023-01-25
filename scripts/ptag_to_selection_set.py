@@ -1,8 +1,17 @@
 import modo
 import lx
+import modo.constants as c
 
 
 def ptag_to_selection_set(rgb_color_strings, prefix_to_ignore):
+    # select all mesh items and enter polygon mode to selection sets creation
+    modo.scene.current().deselect()
+    # enter item mode
+    lx.eval('select.type item')
+    # select all meshes
+    for item in modo.scene.current().items(itype=c.MESH_TYPE):
+        item.select()
+
     # convert ptag sets into polygon selection sets
     for color_str in rgb_color_strings:
         modo.scene.current().deselect()
