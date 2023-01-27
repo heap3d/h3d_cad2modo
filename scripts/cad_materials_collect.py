@@ -19,6 +19,7 @@ from h3d_exceptions import H3dExitException
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
 import h3d_kit_constants as h3dc
 from ptag_to_selection_set import ptag_to_selection_set
+from unassigned_ptags import assign_materials_to_unassigned_ptags
 
 
 def get_materials_from_masks(masks):
@@ -240,9 +241,17 @@ def assign_new_materials(rgb_color_strings, duplicated_ptags):
         )
 
 
+def set_polygon_part(mesh, part_tag="Default"):
+    mesh.select(replace=True)
+    lx.eval('poly.setPart "{}"'.format(part_tag))
+
+
 def main():
     print('')
     print('start...')
+
+    for mesh in modo.Scene().meshes:
+        set_polygon_part(mesh)
 
     initial_masks = get_scene_masks()
 
@@ -286,6 +295,13 @@ def main():
     for item in remove_list:
         h3du.remove_if_exist(item, children=True)
 
+    # assign new materials wich are not assigned yet
+    meshes = set(modo.Scene().meshes)
+    masks = set(modo.Scene().items(itype=c.MASK_TYPE))
+    assign_materials_to_unassigned_ptags(meshes, masks)
+    masks_updated = set(modo.Scene().items(itype=c.MASK_TYPE))
+    mask_processed = masks_updated - masks
+
     lx.eval('select.type item')
 
     print('done.')
@@ -293,8 +309,6 @@ def main():
 
 log_name = h3du.replace_file_ext(modo.scene.current().name)
 h3dd = H3dDebug(enable=False, file=log_name)
-
-color_mode = None
 
 if __name__ == '__main__':
     try:

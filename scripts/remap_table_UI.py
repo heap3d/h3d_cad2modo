@@ -512,7 +512,7 @@ def select_polygons_by_tag(select_material_tag):
     for mask in modo.scene.current().items(itype=c.MASK_TYPE):
         if mask.channel('ptyp') is None:
             continue
-        if mask.channel('ptyp').get() != 'Material':
+        if not h3du.is_material_ptyp(mask.channel('ptyp').get()):
             continue
         if mask.channel('ptag').get().replace(h3dc.MATERIAL_SUFFIX, '') == select_material_tag:
             mask.select(replace=True)
