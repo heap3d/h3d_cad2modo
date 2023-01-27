@@ -159,6 +159,9 @@ class UiOptions:
 
 
 def main():
+    print('')
+    print('octane_process_material_assembly.py start...')
+
     opt = UiOptions()
     # get user values from UI
     opt.CAM_ROT_X = math.degrees(h3du.get_user_value(h3dc.USER_VAL_CAM_ROT_X_NAME))
@@ -236,6 +239,8 @@ def main():
         modo.scene.current().removeItems(mask)
 
     save_as_preset_name(preset_name, opt)
+
+    print('octane_process_material_assembly.py done.')
 
 
 if __name__ == '__main__':

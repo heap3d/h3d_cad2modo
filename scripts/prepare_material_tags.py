@@ -41,7 +41,7 @@ def rename_material(mask):
 
 
 def main():
-    print('start...')
+    print('prepare_material_tags.py start...')
 
     SELECTED_MODE = 'selected' in lx.args()
 
@@ -54,7 +54,7 @@ def main():
     for mask in materials:
         rename_material(mask)
 
-    print('done.')
+    print('prepare_material_tags.py done.')
 
 
 if __name__ == '__main__':

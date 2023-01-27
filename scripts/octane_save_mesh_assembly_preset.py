@@ -57,6 +57,8 @@ def save_multi_items_as_mesh_assembly_preset(item):
 
 
 def main():
+    print('')
+    print('octane_save_mesh_assembly_preset.py start...')
     # check if directory exist, ask for select one
     if not os.path.exists(REFLIB_DIR):
         modo.dialogs.alert(
@@ -64,7 +66,7 @@ def main():
             message='Directory <{}> doesn\'t exist, please select valid reference library directory'.format(REFLIB_DIR),
             dtype='error'
         )
-        exit()
+        return
 
     selected = modo.scene.current().selected
     # get items with no parent
@@ -76,6 +78,8 @@ def main():
             save_solo_mesh_as_mesh_assembly_preset(item)
         else:
             save_multi_items_as_mesh_assembly_preset(item)
+
+    print('octane_save_mesh_assembly_preset.py done.')
 
 
 REFLIB_DIR = h3du.get_user_value(h3dc.USER_VAL_REFLIB_DIR_NAME)

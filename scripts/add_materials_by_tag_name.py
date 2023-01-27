@@ -17,13 +17,13 @@ from unassigned_ptags import assign_materials_to_unassigned_ptags
 
 
 def main():
-    print('start...')
+    print('add_materials_by_tag_name.py start...')
 
     meshes = modo.Scene().meshes
     masks = modo.Scene().items(itype=c.MASK_TYPE)
     assign_materials_to_unassigned_ptags(meshes, masks)
 
-    print('done.')
+    print('add_materials_by_tag_name.py done.')
 
 
 if __name__ == '__main__':

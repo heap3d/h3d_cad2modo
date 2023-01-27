@@ -522,12 +522,13 @@ def select_polygons_by_tag(select_material_tag):
 
 
 def main():
+    print('')
+    print('remap_table_UI.py start...')
+
     scene_filename = modo.scene.current().filename
     if scene_filename is None:
         print('No active scene found, try open a scene first')
         exit()
-    print('')
-    print('start...')
 
     # get remap table page size from config
     global PAGE_SIZE
@@ -607,7 +608,7 @@ def main():
         tag_id = int(line_id) + get_page_start() - 1
         select_polygons_by_tag(global_tags[tag_id])
 
-    print('done.')
+    print('remap_table_UI.py done.')
 
 
 if __name__ == '__main__':

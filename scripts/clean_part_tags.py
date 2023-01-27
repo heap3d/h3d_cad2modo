@@ -17,16 +17,20 @@ from cad_materials_collect import set_polygon_part
 
 
 def main():
+    print('')
+    print('clean_part_tags.py start...')
+
     meshes = modo.Scene().meshes
-    if lx.args:
-        if lx.args[0] == '-selected':
-            meshes = modo.Scene().selectedByType(itype=c.MESH_TYPE)
+    if 'selected' in lx.args():
+        meshes = modo.Scene().selectedByType(itype=c.MESH_TYPE)
 
     if not meshes:
         return
 
     for mesh in meshes:
         set_polygon_part(mesh)
+
+    print('clean_part_tags.py done.')
 
 
 if __name__ == '__main__':

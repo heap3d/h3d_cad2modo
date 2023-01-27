@@ -70,7 +70,7 @@ def mesh_is_not_empty(mesh):
 
 def main():
     print('')
-    print('start...')
+    print('split_mesh_by_material.py start...')
 
     material_masks = [mask for mask in modo.scene.current().items(itype=c.MASK_TYPE) if is_mask_valid(mask)]
     initial_meshes = modo.scene.current().selectedByType(itype=c.MESH_TYPE)
@@ -99,7 +99,7 @@ def main():
             lx.eval('select.paste')
             remove_polys_selset_by_mask(mask)
 
-    print('done.')
+    print('split_mesh_by_material.py done.')
 
 
 if __name__ == '__main__':

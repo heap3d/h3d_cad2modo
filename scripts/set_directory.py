@@ -23,6 +23,9 @@ import h3d_kit_constants as h3dc
 
 
 def main():
+    print('')
+    print('set_directory.py start...')
+
     # initialize dir_path
     filename = h3du.get_user_value(h3dc.USER_VAL_STORE_DIR_NAME)
 
@@ -31,6 +34,8 @@ def main():
     )
     if dialog_result:
         h3du.set_user_value(h3dc.USER_VAL_STORE_DIR_NAME, dialog_result)
+
+    print('set_directory done.')
 
 
 if __name__ == "__main__":

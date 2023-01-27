@@ -248,7 +248,7 @@ def set_polygon_part(mesh, part_tag="Default"):
 
 def main():
     print('')
-    print('start...')
+    print('cad_materials_collect.py start...')
 
     for mesh in modo.Scene().meshes:
         set_polygon_part(mesh)
@@ -302,7 +302,7 @@ def main():
 
     lx.eval('select.type item')
 
-    print('done.')
+    print('cad_materials_collect.py done.')
 
 
 log_name = h3du.replace_file_ext(modo.scene.current().name)
