@@ -299,8 +299,6 @@ def main():
     meshes = set(modo.Scene().meshes)
     masks = set(modo.Scene().items(itype=c.MASK_TYPE))
     assign_materials_to_unassigned_ptags(meshes, masks)
-    masks_updated = set(modo.Scene().items(itype=c.MASK_TYPE))
-    mask_processed = masks_updated - masks
 
     lx.eval('select.type item')
 
