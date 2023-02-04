@@ -90,13 +90,11 @@ def main():
         root_index = mesh.rootIndex
         parent_index = mesh.parentIndex
         mesh_index = root_index if root_index is not None else parent_index
-        h3dd.print_debug('before layer.groupSelected')
         group_loc = modo.Scene().addItem(itype=c.GROUPLOCATOR_TYPE)
         group_loc.setParent(mesh.parent)
         mesh.setParent(group_loc)
         # unmerge mesh into a temp folder
         mesh.select(replace=True)
-        h3dd.print_debug('before layer.unmergeMeshes')
         lx.eval("layer.unmergeMeshes")
         # select all meshes in a folder
         for child in group_loc.children():
@@ -104,12 +102,10 @@ def main():
         # cleanup selected meshes
         mesh_cleanup(opt)
         # merge selected meshes
-        h3dd.print_debug('before layer.mergeMeshes true')
         lx.eval("layer.mergeMeshes true")
         # parent mesh to an previous parent
         parent_item = group_loc.parent
         parent_id = parent_item.id if parent_item else None
-        h3dd.print_debug('before item.parent ...')
         lx.eval("item.parent {} {} {} inPlace:1 duplicate:0".format(mesh.id, parent_id, mesh_index + 1))
         # remove a temp folder
         modo.Scene().removeItems(group_loc)
