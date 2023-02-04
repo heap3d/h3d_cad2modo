@@ -86,9 +86,14 @@ def main():
     for mesh in selected_meshes:
         # group selected mesh in a temp folder
         mesh.select(replace=True)
+        # get root index
+        root_index = mesh.rootIndex
+        parent_index = mesh.parentIndex
+        mesh_index = root_index if root_index is not None else parent_index
         h3dd.print_debug('before layer.groupSelected')
-        lx.eval("layer.groupSelected")
-        group_loc = mesh.parent
+        group_loc = modo.Scene().addItem(itype=c.GROUPLOCATOR_TYPE)
+        group_loc.setParent(mesh.parent)
+        mesh.setParent(group_loc)
         # unmerge mesh into a temp folder
         mesh.select(replace=True)
         h3dd.print_debug('before layer.unmergeMeshes')
@@ -105,7 +110,7 @@ def main():
         parent_item = group_loc.parent
         parent_id = parent_item.id if parent_item else None
         h3dd.print_debug('before item.parent ...')
-        lx.eval("item.parent {} {} {} inPlace:1 duplicate:0".format(mesh.id, parent_id, group_loc.parentIndex))
+        lx.eval("item.parent {} {} {} inPlace:1 duplicate:0".format(mesh.id, parent_id, mesh_index + 1))
         # remove a temp folder
         modo.Scene().removeItems(group_loc)
 
@@ -113,7 +118,7 @@ def main():
 
 
 log_name = h3du.replace_file_ext(modo.scene.current().name)
-h3dd = H3dDebug(enable=True, file=log_name)
+h3dd = H3dDebug(enable=False, file=log_name)
 
 if __name__ == "__main__":
     try:
