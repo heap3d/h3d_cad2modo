@@ -23,6 +23,8 @@ def main():
     masks = modo.Scene().items(itype=c.MASK_TYPE)
     assign_materials_to_unassigned_ptags(meshes, masks)
 
+    lx.eval('select.type item')
+
     print('add_materials_by_tag_name.py done.')
 
 

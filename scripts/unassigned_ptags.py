@@ -69,9 +69,11 @@ def assign_new_material(geo_ptag):
             if poly.materialTag != geo_ptag:
                 continue
             mesh.select(replace=True)
+            lx.eval('select.type polygon')
             poly.select(replace=True)
             color_str = get_color_str(geo_ptag)
             lx.eval('poly.setMaterial "{}" {{{}}} {} {}'.format(geo_ptag, color_str, '0.8', '0.04'))
+            # assign material for one polygon only, there is no need for do it for all polygons
             return
 
 
