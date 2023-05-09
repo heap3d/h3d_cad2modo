@@ -32,6 +32,7 @@ USERVAL_NAME_CMR_DEL_POLYGON_PART_TAG = "h3d_cmr_del_polygon_part"
 USERVAL_NAME_CMR_FLATTEN_SCENE = "h3d_cmr_flatten_scene"
 USERVAL_NAME_CMR_DEL_ENVIRONMENT = 'h3d_cmr_del_environments'
 
+
 class UserOptions:
     del_mesh_instance = False
     mesh_instance_to_mesh = False
@@ -99,10 +100,22 @@ def get_static_protected():
     static_protected.add(modo.Scene().sceneItem)
     # Render item
     static_protected.add(modo.Scene().renderItem)
-    # Shading items
-    shader_items = modo.Scene().items(itype=c.SHADERFOLDER_TYPE)
-    static_protected.update(shader_items)
-    # [Schematic nodes
+    # Bake items
+    bake_items = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name='Bake Items*')
+    static_protected.update(bake_items[:1])
+    # Nodes
+    nodes = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name='Nodes*')
+    static_protected.update(nodes[:1])
+    # Environments
+    environments = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name='Environments*')
+    static_protected.update(environments[:1])
+    # Library
+    librarys = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name='Library*')
+    static_protected.update(librarys[:1])
+    # Lights
+    lights = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name='Lights*')
+    static_protected.update(lights[:1])
+    # Schematic nodes
     schematicNodes = modo.Scene().items(itype=c.SCHMNODE_TYPE)
     static_protected.update(schematicNodes)
     # Base material
@@ -116,21 +129,21 @@ def get_static_protected():
     return static_protected
 
 
-def get_connected(item:modo.Item):
+def get_connected(item: modo.Item):
     """get connected items"""
     return item.itemGraph('shadeLoc').connectedItems['Forward']
 
 
-def get_environment_collection(item:modo.Item):
+def get_environment_collection(item: modo.Item):
     """get environment's children and connected items"""
     env_collection = item.children(recursive=True)
     for child in env_collection:
         env_collection.extend(get_connected(child))
-    
-    return env_collection
-    
 
-def get_protected(items:Iterable[modo.Item], types, options:UserOptions):
+    return env_collection
+
+
+def get_protected(items: Iterable[modo.Item], types, options: UserOptions):
     """gets list of items with a specific types according to options"""
     # collect Protected items
     filtered = set()
@@ -178,19 +191,22 @@ def delete_item(item):
 
 
 def remove_items_from_scene(items):
-    h3dd.print_debug("Remove items from scene:")
     # process assemblies
     assemblies = set(i for i in items if i.type == "assembly")
     clear_assemblies(assemblies)
     root_assemblies = get_root_assemblies(assemblies)
+    h3dd.print_debug("Remove assemblies:")
     for root_assembly in root_assemblies:
         delete_item(root_assembly)
+    h3dd.print_debug('done.')
     items = items - assemblies
 
     # process groups
     groups = set(i for i in items if h3du.safe_type(i) == "group")
+    h3dd.print_debug("Remove groups:")
     for group in groups:
         delete_item(group)
+    h3dd.print_debug('done.')
     items = items - groups
 
     # remove all environments
@@ -200,25 +216,39 @@ def remove_items_from_scene(items):
         for env in environments:
             duplicates.add(modo.Scene().duplicateItem(env))
     environments.update(duplicates)
+    h3dd.print_debug("Remove environments:")
     for environment in environments:
         delete_item(environment)
+    h3dd.print_debug('done.')
     items = items - environments
 
     # octane material overrides
     octane_mats = set(modo.Scene().items(itype="material.octaneRenderer"))
+    h3dd.print_debug("Remove octane materials:")
     for octane_mat in octane_mats:
         delete_item(octane_mat)
+    h3dd.print_debug('done.')
     items = items - octane_mats
 
     # delete rest of the items
+    h3dd.print_debug("Remove other items:")
     for item in items:
         delete_item(item)
+    h3dd.print_debug('done.')
 
 
 def add_base_material():
+    h3dd.print_debug('adding base material:')
+    h3dd.print_debug('creating advancedMaterial...', 1)
+    modo.Scene().renderItem.select()
     lx.eval("shader.create advancedMaterial")
+    h3dd.print_debug('enabling smooth area weight...', 1)
+    modo.Scene().renderItem.select()
     lx.eval("material.smoothAreaWeight area")
+    h3dd.print_debug('enabling smooth weight angle...', 1)
+    modo.Scene().renderItem.select()
     lx.eval("material.smoothWeight angle true")
+    h3dd.print_debug('done.')
 
 
 def set_polygon_part(mesh, part_tag="Default"):
@@ -276,7 +306,6 @@ def main():
     opt.loc_size = h3du.get_user_value(USERVAL_NAME_CMR_MESH_LOC_SIZE)
     opt.del_environments = h3du.get_user_value(USERVAL_NAME_CMR_DEL_ENVIRONMENT)
 
-
     # update types according to user options
     if not opt.del_mesh_instance:
         filter_types.add(h3du.itype_str(c.MESHINST_TYPE))
@@ -308,6 +337,8 @@ def main():
 
     if not modo.Scene().items(itype=c.ADVANCEDMATERIAL_TYPE):
         add_base_material()
+    else:
+        h3dd.print_items(modo.Scene().items(itype=c.ADVANCEDMATERIAL_TYPE), 'advanced materials:')
 
     # process polygon parts
     if opt.del_polygon_part:
