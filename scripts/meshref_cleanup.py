@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # ================================
-# (C)2022 Dmytro Holub
+# (C)2022-2023 Dmytro Holub
 # heap3d@gmail.com
 # --------------------------------
 # modo python
@@ -31,6 +31,7 @@ USERVAL_NAME_CMR_DEL_GROUP = "h3d_cmr_del_group"
 USERVAL_NAME_CMR_DEL_POLYGON_PART_TAG = "h3d_cmr_del_polygon_part"
 USERVAL_NAME_CMR_FLATTEN_SCENE = "h3d_cmr_flatten_scene"
 USERVAL_NAME_CMR_DEL_ENVIRONMENT = 'h3d_cmr_del_environments'
+USERVAL_NAME_CMR_DEL_MATERIAL = 'h3d_cmr_del_materials'
 
 
 class UserOptions:
@@ -46,6 +47,7 @@ class UserOptions:
     del_polygon_part = False
     flatten_scene = False
     del_environments = False
+    del_materials = False
 
 
 def is_protected_item(item, types, options):
@@ -305,8 +307,9 @@ def main():
     opt.flatten_scene = h3du.get_user_value(USERVAL_NAME_CMR_FLATTEN_SCENE)
     opt.loc_size = h3du.get_user_value(USERVAL_NAME_CMR_MESH_LOC_SIZE)
     opt.del_environments = h3du.get_user_value(USERVAL_NAME_CMR_DEL_ENVIRONMENT)
+    opt.del_materials = h3du.get_user_value(USERVAL_NAME_CMR_DEL_MATERIAL)
 
-    # update types according to user options
+    # update safe types according to user options
     if not opt.del_mesh_instance:
         filter_types.add(h3du.itype_str(c.MESHINST_TYPE))
     if opt.mesh_instance_to_mesh:
@@ -321,6 +324,10 @@ def main():
         filter_types.add(h3du.itype_str(c.GROUP_TYPE))
     if not opt.del_environments:
         filter_types.add(h3du.itype_str(c.ENVIRONMENT_TYPE))
+    if not opt.del_materials:
+        filter_types.add(h3du.itype_str(c.MASK_TYPE))
+        filter_types.add(h3du.itype_str(c.ADVANCEDMATERIAL_TYPE))
+        filter_types.add(h3du.itype_str(c.DEFAULTSHADER_TYPE))
 
     # flatten scene hierarchy
     if opt.flatten_scene:
