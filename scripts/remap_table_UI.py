@@ -16,6 +16,7 @@ import sys
 
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_utilites:}')))
 import h3d_utils as h3du
+from h3d_debug import H3dDebug
 sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
 import h3d_kit_constants as h3dc
 
@@ -486,25 +487,33 @@ def apply_command(tags, materials, tags_materials_map):
 
 
 def get_float_color_str_from_mask(tag_name):
+    h3dd.print_debug("get_float_color_str_from_mask('{}')".format(tag_name))
     color_str = h3dc.MISSING_COLOR
     for mask in modo.scene.current().items(itype=c.MASK_TYPE):
         if mask.channel('ptyp') is None:
+            h3dd.print_debug("ptyp is None", 1)
             continue
-        if mask.channel('ptyp').get() != 'Material':
+        if mask.channel('ptyp').get() != 'Material' and mask.channel('ptyp').get() != '':
+            h3dd.print_debug("ptyp <{}> != Material".format(mask.channel('ptyp').get()), 1)
             continue
         if mask.channel('ptag').get() == '':
+            h3dd.print_debug("ptag == ''", 1)
             continue
         # filter out mismatched masks
         if mask.channel('ptag').get() != tag_name:
+            h3dd.print_debug("ptag <{}> != tag_name <{}>".format(mask.channel('ptag').get(), tag_name), 1)
             continue
         # find advancedMaterial in mask children
+        h3dd.print_debug("ptag <{}> == tag_name <{}>".format(mask.channel('ptag').get(), tag_name), 1)
         for child in mask.children():
             if child.type == 'advancedMaterial':
                 adv_mat = child
                 # get diffuse color
                 color_str = ' '.join(str(x) for x in adv_mat.channel('diffCol').get())
+                h3dd.print_debug("advancedMaterial: color_str <{}>".format(color_str))
                 return color_str
 
+    h3dd.print_debug("return color_str: <{}>".format(color_str))
     return color_str
 
 
@@ -613,4 +622,5 @@ def main():
 
 if __name__ == '__main__':
     PAGE_SIZE = 0
+    h3dd = H3dDebug(enable=False, file=h3du.replace_file_ext(modo.Scene().filename, ".log"))
     main()
