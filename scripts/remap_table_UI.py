@@ -518,6 +518,7 @@ def get_float_color_str_from_mask(tag_name):
 
 
 def select_polygons_by_tag(select_material_tag):
+    is_mask_selected = False
     for mask in modo.scene.current().items(itype=c.MASK_TYPE):
         if mask.channel('ptyp') is None:
             continue
@@ -525,8 +526,25 @@ def select_polygons_by_tag(select_material_tag):
             continue
         if mask.channel('ptag').get().replace(h3dc.MATERIAL_SUFFIX, '') == select_material_tag:
             mask.select(replace=True)
+            is_mask_selected = True
             # h3dd.print_debug('<{}> polygon tag selected'.format(select_material_tag))
             break
+    if is_mask_selected:
+        lx.eval('material.selectPolygons')
+        return
+    # add tmp mesh
+    tmp_mesh = modo.Scene().addMesh()
+    tmp_mesh.select(replace=True)
+    # add unit cube into current mesh item
+    lx.eval('script.run "macro.scriptservice:32235710027:macro"')
+    # assign searching material
+    lx.eval('poly.setMaterial "{}" {{0.6 0.6 0.6}} 0.8 0.04 true false false'.format(select_material_tag))
+    seaching_mask = modo.Scene().selectedByType(itype=c.MASK_TYPE)[0]
+    # delete tmp mesh
+    modo.Scene().removeItems(tmp_mesh)
+    # select searching material
+    seaching_mask.select(replace=True)
+    # select polygons by material
     lx.eval('material.selectPolygons')
 
 
@@ -540,11 +558,14 @@ def deselect_hidden():
 
         h3dd.print_debug("mesh: <{}> visible: <{}>, visible channel: <{}>"
                          .format(mesh.name, is_visible(mesh), mesh.channel('visible').get()))
-        if all([is_visible(item) for item in mesh.parents]) and is_visible(mesh):
-            continue
-
-        for item in mesh.parents:
-            h3dd.print_debug('parent <{}>: is_visible = {}'.format(item.name, is_visible(item)), 1)
+        if not mesh.parents:
+            if is_visible(mesh):
+                continue
+        else:
+            if all([is_visible(item) for item in mesh.parents]) and is_visible(mesh):
+                continue
+            for item in mesh.parents:
+                h3dd.print_debug('parent <{}>: is_visible = {}'.format(item.name, is_visible(item)), 1)
 
         mesh.geometry.polygons.select()
         mesh.deselect()
