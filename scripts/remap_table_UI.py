@@ -487,21 +487,21 @@ def apply_command(tags, materials, tags_materials_map):
 
 
 def get_float_color_str_from_mask(tag_name):
-    h3dd.print_debug("get_float_color_str_from_mask('{}')".format(tag_name))
+    # h3dd.print_debug("get_float_color_str_from_mask('{}')".format(tag_name))
     color_str = h3dc.MISSING_COLOR
     for mask in modo.scene.current().items(itype=c.MASK_TYPE):
         if mask.channel('ptyp') is None:
-            h3dd.print_debug("ptyp is None", 1)
+            # h3dd.print_debug("ptyp is None", 1)
             continue
         if mask.channel('ptyp').get() != 'Material' and mask.channel('ptyp').get() != '':
-            h3dd.print_debug("ptyp <{}> != Material".format(mask.channel('ptyp').get()), 1)
+            # h3dd.print_debug("ptyp <{}> != Material".format(mask.channel('ptyp').get()), 1)
             continue
         if mask.channel('ptag').get() == '':
-            h3dd.print_debug("ptag == ''", 1)
+            # h3dd.print_debug("ptag == ''", 1)
             continue
         # filter out mismatched masks
         if mask.channel('ptag').get() != tag_name:
-            h3dd.print_debug("ptag <{}> != tag_name <{}>".format(mask.channel('ptag').get(), tag_name), 1)
+            # h3dd.print_debug("ptag <{}> != tag_name <{}>".format(mask.channel('ptag').get(), tag_name), 1)
             continue
         # find advancedMaterial in mask children
         h3dd.print_debug("ptag <{}> == tag_name <{}>".format(mask.channel('ptag').get(), tag_name), 1)
@@ -510,10 +510,10 @@ def get_float_color_str_from_mask(tag_name):
                 adv_mat = child
                 # get diffuse color
                 color_str = ' '.join(str(x) for x in adv_mat.channel('diffCol').get())
-                h3dd.print_debug("advancedMaterial: color_str <{}>".format(color_str))
+                # h3dd.print_debug("advancedMaterial: color_str <{}>".format(color_str))
                 return color_str
 
-    h3dd.print_debug("return color_str: <{}>".format(color_str))
+    # h3dd.print_debug("return color_str: <{}>".format(color_str))
     return color_str
 
 
@@ -525,9 +525,29 @@ def select_polygons_by_tag(select_material_tag):
             continue
         if mask.channel('ptag').get().replace(h3dc.MATERIAL_SUFFIX, '') == select_material_tag:
             mask.select(replace=True)
-            print('<{}> polygon tag selected'.format(select_material_tag))
+            # h3dd.print_debug('<{}> polygon tag selected'.format(select_material_tag))
             break
     lx.eval('material.selectPolygons')
+
+
+def is_visible(item):
+    visible = item.channel('visible').get()
+    return visible == 'default' or visible == 'on'
+
+
+def deselect_hidden():
+    for mesh in modo.Scene().selectedByType(itype=c.MESH_TYPE):
+
+        h3dd.print_debug("mesh: <{}> visible: <{}>, visible channel: <{}>"
+                         .format(mesh.name, is_visible(mesh), mesh.channel('visible').get()))
+        if all([is_visible(item) for item in mesh.parents]) and is_visible(mesh):
+            continue
+
+        for item in mesh.parents:
+            h3dd.print_debug('parent <{}>: is_visible = {}'.format(item.name, is_visible(item)), 1)
+
+        mesh.geometry.polygons.select()
+        mesh.deselect()
 
 
 def main():
@@ -616,6 +636,7 @@ def main():
         line_id = int(line_id_str)
         tag_id = int(line_id) + get_page_start() - 1
         select_polygons_by_tag(global_tags[tag_id])
+        deselect_hidden()
 
     print('remap_table_UI.py done.')
 
