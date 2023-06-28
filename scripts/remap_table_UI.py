@@ -94,10 +94,10 @@ def get_tags_list(mode):
             tags.extend(colors_string_store.split(';'))
         except RuntimeError:
             print('The scene is not scanned. Press the <scan scene> button to scan.')
-            exit()
+            sys.exit()
     if len(tags) < 1 or (len(tags) == 1 and tags[0] == ''):
         print('Void tags list. Try to scan scene or run Consolidate CAD Materials script first.')
-        exit()
+        sys.exit()
     return tags
 
 
@@ -181,7 +181,7 @@ def update_table(tags, start):
 
     if not lx.eval('query scriptsysservice userValue.isDefined ? {}'.format(h3dc.USERVAL_NAME_MAP_STORE)):
         print('user.value {} not exist. Try scan scene first'.format(h3dc.USERVAL_NAME_MAP_STORE))
-        exit()
+        sys.exit()
     tags_materials_map_store_string = h3du.get_user_value(h3dc.USERVAL_NAME_MAP_STORE)
     tags_materials_map = [int(x) for x in tags_materials_map_store_string.split(';')]
 
@@ -356,7 +356,7 @@ def save_map(tags, materials, tags_materials_map):
     # cancel save if map lines list empty
     if not len(map_lines):
         print('No data to save')
-        exit()
+        sys.exit()
     scene_name = modo.scene.current().name.split('.')[0].strip()
     if not scene_name or scene_name == '':
         scene_name = 'RGB - Materials'
@@ -371,7 +371,7 @@ def save_map(tags, materials, tags_materials_map):
     )
     # print('save_map()>dialog_result: <{}>'.format(dialog_result))
     if full_filename is None:
-        exit()
+        sys.exit()
     # save decoded tags_materials_map to file
     with open(full_filename, 'w') as file:
         file.writelines(map_lines)
@@ -381,7 +381,7 @@ def load_map(filename, tags, materials, tags_materials_map):
     # check tags_list
     if not len(tags):
         print('No CAD colors found, try scan the scene first')
-        exit()
+        sys.exit()
     if filename is None:
         print('filename is None')
         return tags_materials_map
@@ -578,7 +578,7 @@ def main():
     scene_filename = modo.scene.current().filename
     if scene_filename is None:
         print('No active scene found, try open a scene first')
-        exit()
+        sys.exit()
 
     # get remap table page size from config
     global PAGE_SIZE
