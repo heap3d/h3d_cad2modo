@@ -10,6 +10,7 @@
 		<source target="h3d_cad2modo/scripts/h3d_kit_constants.py">scripts/h3d_kit_constants.py</source>
 		<source target="h3d_cad2modo/scripts/hierarchy_fix.py">scripts/hierarchy_fix.py</source>
 		<source target="h3d_cad2modo/scripts/meshref_cleanup.py">scripts/meshref_cleanup.py</source>
+		<source target="h3d_cad2modo/scripts/remove_all_materials.py">scripts/remove_all_materials.py</source>
 		<source target="h3d_cad2modo/scripts/mesh_islands_cleanup.py">scripts/mesh_islands_cleanup.py</source>
 		<source target="h3d_cad2modo/scripts/octane_process_material_assembly.py">scripts/octane_process_material_assembly.py</source>
 		<source target="h3d_cad2modo/scripts/octane_save_mesh_assembly_preset.py">scripts/octane_save_mesh_assembly_preset.py</source>

@@ -13,10 +13,15 @@ import modo
 import modo.constants as c
 import sys
 
-sys.path.append("{}\\scripts".format(lx.eval("query platformservice alias ? {kit_h3d_utilites:}")))
+sys.path.append(
+    "{}\\scripts".format(lx.eval("query platformservice alias ? {kit_h3d_utilites:}"))
+)
 import h3d_utils as h3du
 from h3d_debug import H3dDebug
-sys.path.append("{}\\scripts".format(lx.eval("query platformservice alias ? {kit_h3d_cad2modo:}")))
+
+sys.path.append(
+    "{}\\scripts".format(lx.eval("query platformservice alias ? {kit_h3d_cad2modo:}"))
+)
 import remove_duplicated_scene_items
 
 USERVAL_NAME_CMR_DEL_MESH_INSTANCE = "h3d_cmr_del_mesh_instance"
@@ -30,8 +35,8 @@ USERVAL_NAME_CMR_DEL_ASSEMBLY = "h3d_cmr_del_assembly"
 USERVAL_NAME_CMR_DEL_GROUP = "h3d_cmr_del_group"
 USERVAL_NAME_CMR_DEL_POLYGON_PART_TAG = "h3d_cmr_del_polygon_part"
 USERVAL_NAME_CMR_FLATTEN_SCENE = "h3d_cmr_flatten_scene"
-USERVAL_NAME_CMR_DEL_ENVIRONMENT = 'h3d_cmr_del_environments'
-USERVAL_NAME_CMR_DEL_MATERIAL = 'h3d_cmr_del_materials'
+USERVAL_NAME_CMR_DEL_ENVIRONMENT = "h3d_cmr_del_environments"
+USERVAL_NAME_CMR_DEL_MATERIAL = "h3d_cmr_del_materials"
 
 
 class UserOptions:
@@ -103,29 +108,35 @@ def get_static_protected():
     # Render item
     static_protected.add(modo.Scene().renderItem)
     # Bake items
-    bake_items = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name='Bake Items*')
+    bake_items = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name="Bake Items*")
     static_protected.update(bake_items[:1])
     # Nodes
-    nodes = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name='Nodes*')
+    nodes = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name="Nodes*")
     static_protected.update(nodes[:1])
     # Environments
-    environments = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name='Environments*')
+    environments = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name="Environments*")
     static_protected.update(environments[:1])
     # Library
-    librarys = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name='Library*')
+    librarys = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name="Library*")
     static_protected.update(librarys[:1])
     # Lights
-    lights = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name='Lights*')
+    lights = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name="Lights*")
     static_protected.update(lights[:1])
     # Schematic nodes
     schematicNodes = modo.Scene().items(itype=c.SCHMNODE_TYPE)
     static_protected.update(schematicNodes)
     # Base material
-    root_mats = [i for i in modo.Scene().items(itype=c.ADVANCEDMATERIAL_TYPE)
-                 if i.parent.type == h3du.itype_str(c.POLYRENDER_TYPE)]
+    root_mats = [
+        i
+        for i in modo.Scene().items(itype=c.ADVANCEDMATERIAL_TYPE)
+        if (i.parent is None or i.parent.type == h3du.itype_str(c.POLYRENDER_TYPE))
+    ]
+    h3dd.print_items(root_mats, "roots mats:")
     static_protected.update(root_mats[:1])
     # Transforms
-    transforms = set(i for i in modo.Scene().items(itype=c.TRANSFORM_TYPE, superType=True))
+    transforms = set(
+        i for i in modo.Scene().items(itype=c.TRANSFORM_TYPE, superType=True)
+    )
     static_protected.update(transforms)
 
     return static_protected
@@ -133,7 +144,7 @@ def get_static_protected():
 
 def get_connected(item: modo.Item):
     """get connected items"""
-    return item.itemGraph('shadeLoc').connectedItems['Forward']
+    return item.itemGraph("shadeLoc").connectedItems["Forward"]
 
 
 def get_environment_collection(item: modo.Item):
@@ -183,7 +194,12 @@ def get_root_assemblies(assemblies):
 
 
 def delete_item(item):
-    h3dd.print_debug("removing <{}> {} {} ...".format(h3dd.get_name(item), item, h3du.safe_type(item)), indent=1)
+    h3dd.print_debug(
+        "removing <{}> {} {} ...".format(
+            h3dd.get_name(item), item, h3du.safe_type(item)
+        ),
+        indent=1,
+    )
     try:
         item.select(replace=True)
     except LookupError:
@@ -200,7 +216,7 @@ def remove_items_from_scene(items):
     h3dd.print_debug("Remove assemblies:")
     for root_assembly in root_assemblies:
         delete_item(root_assembly)
-    h3dd.print_debug('done.')
+    h3dd.print_debug("done.")
     items = items - assemblies
 
     # process groups
@@ -208,7 +224,7 @@ def remove_items_from_scene(items):
     h3dd.print_debug("Remove groups:")
     for group in groups:
         delete_item(group)
-    h3dd.print_debug('done.')
+    h3dd.print_debug("done.")
     items = items - groups
 
     # remove all environments
@@ -221,7 +237,7 @@ def remove_items_from_scene(items):
     h3dd.print_debug("Remove environments:")
     for environment in environments:
         delete_item(environment)
-    h3dd.print_debug('done.')
+    h3dd.print_debug("done.")
     items = items - environments
 
     # octane material overrides
@@ -229,28 +245,28 @@ def remove_items_from_scene(items):
     h3dd.print_debug("Remove octane materials:")
     for octane_mat in octane_mats:
         delete_item(octane_mat)
-    h3dd.print_debug('done.')
+    h3dd.print_debug("done.")
     items = items - octane_mats
 
     # delete rest of the items
     h3dd.print_debug("Remove other items:")
     for item in items:
         delete_item(item)
-    h3dd.print_debug('done.')
+    h3dd.print_debug("done.")
 
 
 def add_base_material():
-    h3dd.print_debug('adding base material:')
-    h3dd.print_debug('creating advancedMaterial...', 1)
+    h3dd.print_debug("adding base material:")
+    h3dd.print_debug("creating advancedMaterial...", 1)
     modo.Scene().renderItem.select()
     lx.eval("shader.create advancedMaterial")
-    h3dd.print_debug('enabling smooth area weight...', 1)
+    h3dd.print_debug("enabling smooth area weight...", 1)
     modo.Scene().renderItem.select()
     lx.eval("material.smoothAreaWeight area")
-    h3dd.print_debug('enabling smooth weight angle...', 1)
+    h3dd.print_debug("enabling smooth weight angle...", 1)
     modo.Scene().renderItem.select()
     lx.eval("material.smoothWeight angle true")
-    h3dd.print_debug('done.')
+    h3dd.print_debug("done.")
 
 
 def set_polygon_part(mesh, part_tag="Default"):
@@ -288,16 +304,17 @@ def main():
     print("")
     print("meshref_cleanup.py start...")
 
-    filter_types = {
-        h3du.itype_str(c.MESH_TYPE),
-        h3du.itype_str(c.MORPHDEFORM_TYPE)
-    }
+    filter_types = {h3du.itype_str(c.MESH_TYPE), h3du.itype_str(c.MORPHDEFORM_TYPE)}
 
     opt = UserOptions()
 
     opt.del_mesh_instance = h3du.get_user_value(USERVAL_NAME_CMR_DEL_MESH_INSTANCE)
-    opt.mesh_instance_to_mesh = h3du.get_user_value(USERVAL_NAME_CMR_MESH_INSTANCE_TO_MESH)
-    opt.mesh_instance_to_loc = h3du.get_user_value(USERVAL_NAME_CMR_MESH_INSTANCE_TO_LOC)
+    opt.mesh_instance_to_mesh = h3du.get_user_value(
+        USERVAL_NAME_CMR_MESH_INSTANCE_TO_MESH
+    )
+    opt.mesh_instance_to_loc = h3du.get_user_value(
+        USERVAL_NAME_CMR_MESH_INSTANCE_TO_LOC
+    )
     opt.del_void_mesh = h3du.get_user_value(USERVAL_NAME_CMR_DEL_VOID_MESH)
     opt.del_loc = h3du.get_user_value(USERVAL_NAME_CMR_DEL_LOC)
     opt.del_grp_loc = h3du.get_user_value(USERVAL_NAME_CMR_DEL_GRP_LOC)
@@ -345,7 +362,9 @@ def main():
     if not modo.Scene().items(itype=c.ADVANCEDMATERIAL_TYPE):
         add_base_material()
     else:
-        h3dd.print_items(modo.Scene().items(itype=c.ADVANCEDMATERIAL_TYPE), 'advanced materials:')
+        h3dd.print_items(
+            modo.Scene().items(itype=c.ADVANCEDMATERIAL_TYPE), "advanced materials:"
+        )
 
     # process polygon parts
     if opt.del_polygon_part:
@@ -388,6 +407,6 @@ def main():
 
 if __name__ == "__main__":
     h3dd = H3dDebug(
-        enable=False, file=h3du.replace_file_ext(modo.Scene().filename, ".log")
+        enable=True, file=h3du.replace_file_ext(modo.Scene().filename, ".log")
     )
     main()
