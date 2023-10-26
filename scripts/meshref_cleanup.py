@@ -407,6 +407,6 @@ def main():
 
 if __name__ == "__main__":
     h3dd = H3dDebug(
-        enable=True, file=h3du.replace_file_ext(modo.Scene().filename, ".log")
+        enable=False, file=h3du.replace_file_ext(modo.Scene().filename, ".log")
     )
     main()
