@@ -37,8 +37,8 @@ if not meshes:
 material_plate_mesh = meshes[0]  # type: modo.source_item.Mesh
 material_plate_mesh.select(replace=True)
 if material_plate_mesh.parent:
-    lx.eval('item.parent parent:{}')
-lx.eval('item.editorColor red')
+    lx.eval("item.parent parent:{}")
+lx.eval("item.editorColor red")
 
 # subdivide mesh until polygons count exceeds materials count
 while len(material_plate_mesh.geometry.polygons) < len(material_library):
@@ -51,6 +51,8 @@ for polygon in material_plate_mesh.geometry.polygons:
 
         #  select polygon and assign material to it
         polygon.select(replace=True)
+        if not materialTag:
+            continue
         lx.eval('poly.setMaterial "{}"'.format(materialTag))
 
 print(
