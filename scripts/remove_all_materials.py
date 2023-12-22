@@ -7,16 +7,11 @@
 # remove all advanced materials from scene, including not displaying one
 
 import modo
-import sys
-import lx
 
-sys.path.append(
-    "{}\\scripts".format(lx.eval("query platformservice alias ? {kit_h3d_utilites:}"))
-)
-import h3d_utils as h3du
-from h3d_debug import H3dDebug
+from h3d_utilites.scripts.h3d_utils import replace_file_ext
+from h3d_utilites.scripts.h3d_debug import H3dDebug
 
-log_name = h3du.replace_file_ext(modo.scene.current().name)
+log_name = replace_file_ext(modo.scene.current().name)
 h3dd = H3dDebug(enable=False, file=log_name)
 
 

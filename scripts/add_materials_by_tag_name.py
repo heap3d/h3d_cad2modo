@@ -10,10 +10,8 @@
 import lx
 import modo
 import modo.constants as c
-import sys
 
-sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
-from unassigned_ptags import assign_materials_to_unassigned_ptags
+from h3d_cad2modo.scripts.unassigned_ptags import assign_materials_to_unassigned_ptags
 
 
 def main():

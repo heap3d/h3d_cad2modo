@@ -10,11 +10,9 @@
 import modo
 import lx
 from random import random
-import sys
 
-sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_utilites:}')))
-import h3d_utils as h3du
-from h3d_debug import H3dDebug
+from h3d_utilites.scripts.h3d_utils import is_material_ptyp, replace_file_ext
+from h3d_utilites.scripts.h3d_debug import H3dDebug
 
 
 def get_mask_ptags(masks):
@@ -24,7 +22,7 @@ def get_mask_ptags(masks):
         if not ptyp_channel:
             continue
         ptyp = ptyp_channel.get()
-        if not h3du.is_material_ptyp(ptyp):
+        if not is_material_ptyp(ptyp):
             continue
         ptag_channel = mask.channel('ptag')
         if not ptag_channel:
@@ -88,5 +86,5 @@ def assign_materials_to_unassigned_ptags(meshes, masks):
         masks_ptags.add(geo_ptag)
 
 
-log_name = h3du.replace_file_ext(modo.scene.current().name)
+log_name = replace_file_ext(modo.scene.current().name)
 h3dd = H3dDebug(enable=False, file=log_name)

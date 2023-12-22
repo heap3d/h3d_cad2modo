@@ -11,12 +11,10 @@
 import lx
 import modo
 import modo.constants as c
-import sys
 
-sys.path.append("{}\\scripts".format(lx.eval("query platformservice alias ? {kit_h3d_utilites:}")))
-import h3d_utils as h3du
-from h3d_debug import H3dDebug
-from h3d_exceptions import H3dExitException
+from h3d_utilites.scripts.h3d_utils import replace_file_ext, get_user_value
+from h3d_utilites.scripts.h3d_debug import H3dDebug
+from h3d_utilites.scripts.h3d_exceptions import H3dExitException
 
 
 REMOVE_FLOATING_VERTICES = "h3d_imc_remove_floating_vertices"
@@ -68,17 +66,17 @@ def main():
     print("start mesh_islands_cleanup.py ...")
 
     opt = Options()
-    opt.remove_floating_vertices = h3du.get_user_value(REMOVE_FLOATING_VERTICES)
-    opt.remove_one_point_polygons = h3du.get_user_value(REMOVE_ONE_POINT_POLYGONS)
-    opt.remove_two_points_polygons = h3du.get_user_value(REMOVE_TWO_POINTS_POLYGONS)
-    opt.fix_duplicate_points_in_polygon = h3du.get_user_value(FIX_DUPLICATE_POINTS_IN_POLYGON)
-    opt.remove_colinear_vertices = h3du.get_user_value(REMOVE_COLINEAR_VERTICES)
-    opt.fix_face_normal_vectors = h3du.get_user_value(FIX_FACE_NORMAL_VECTORS)
-    opt.merge_vertices = h3du.get_user_value(MERGE_VERTICES)
-    opt.merge_disco_values = h3du.get_user_value(MERGE_DISCO_VALUES)
-    opt.unify_polygons = h3du.get_user_value(UNIFY_POLYGONS)
-    opt.force_unify = h3du.get_user_value(FORCE_UNIFY)
-    opt.remove_disco_weight_values = h3du.get_user_value(REMOVE_DISCO_WEIGHT_VALUES)
+    opt.remove_floating_vertices = get_user_value(REMOVE_FLOATING_VERTICES)
+    opt.remove_one_point_polygons = get_user_value(REMOVE_ONE_POINT_POLYGONS)
+    opt.remove_two_points_polygons = get_user_value(REMOVE_TWO_POINTS_POLYGONS)
+    opt.fix_duplicate_points_in_polygon = get_user_value(FIX_DUPLICATE_POINTS_IN_POLYGON)
+    opt.remove_colinear_vertices = get_user_value(REMOVE_COLINEAR_VERTICES)
+    opt.fix_face_normal_vectors = get_user_value(FIX_FACE_NORMAL_VECTORS)
+    opt.merge_vertices = get_user_value(MERGE_VERTICES)
+    opt.merge_disco_values = get_user_value(MERGE_DISCO_VALUES)
+    opt.unify_polygons = get_user_value(UNIFY_POLYGONS)
+    opt.force_unify = get_user_value(FORCE_UNIFY)
+    opt.remove_disco_weight_values = get_user_value(REMOVE_DISCO_WEIGHT_VALUES)
 
     # get selected meshes
     selected_meshes = modo.Scene().selectedByType(itype=c.MESH_TYPE)
@@ -113,7 +111,7 @@ def main():
     print("mesh_islands_cleanup.py done.")
 
 
-log_name = h3du.replace_file_ext(modo.scene.current().name)
+log_name = replace_file_ext(modo.scene.current().name)
 h3dd = H3dDebug(enable=False, file=log_name)
 
 if __name__ == "__main__":

@@ -11,18 +11,11 @@ from typing import Iterable
 import lx
 import modo
 import modo.constants as c
-import sys
 
-sys.path.append(
-    "{}\\scripts".format(lx.eval("query platformservice alias ? {kit_h3d_utilites:}"))
-)
-import h3d_utils as h3du
-from h3d_debug import H3dDebug
+from h3d_utilites.scripts.h3d_utils import safe_type, itype_str, get_user_value, replace_file_ext
+from h3d_utilites.scripts.h3d_debug import H3dDebug
 
-sys.path.append(
-    "{}\\scripts".format(lx.eval("query platformservice alias ? {kit_h3d_cad2modo:}"))
-)
-import remove_duplicated_scene_items
+import h3d_cad2modo.scripts.remove_duplicated_scene_items as remove_duplicated_scene_items
 
 USERVAL_NAME_CMR_DEL_MESH_INSTANCE = "h3d_cmr_del_mesh_instance"
 USERVAL_NAME_CMR_MESH_INSTANCE_TO_MESH = "h3d_cmr_mesh_instance_to_mesh"
@@ -58,10 +51,10 @@ class UserOptions:
 def is_protected_item(item, types, options):
     """returns True if item is protected. Otherwise returns False"""
     protected = False
-    if h3du.safe_type(item) in types:
+    if safe_type(item) in types:
         protected = True
     if options.del_void_mesh:
-        if h3du.itype_str(c.MESH_TYPE) in types:
+        if itype_str(c.MESH_TYPE) in types:
             # process void mesh items
             if is_void_mesh(item):
                 # mesh item is not protected if no polygons
@@ -92,7 +85,7 @@ def is_void_mesh(mesh):
     """returns True if item is mesh with no polygons. Otherwise returns False. If item is not a mesh returns None"""
     if not mesh:
         return None
-    if mesh.type != h3du.itype_str(c.MESH_TYPE):
+    if mesh.type != itype_str(c.MESH_TYPE):
         return None
     if mesh.geometry.polygons:
         return False
@@ -129,7 +122,7 @@ def get_static_protected():
     root_mats = [
         i
         for i in modo.Scene().items(itype=c.ADVANCEDMATERIAL_TYPE)
-        if (i.parent is None or i.parent.type == h3du.itype_str(c.POLYRENDER_TYPE))
+        if (i.parent is None or i.parent.type == itype_str(c.POLYRENDER_TYPE))
     ]
     h3dd.print_items(root_mats, "roots mats:")
     static_protected.update(root_mats[:1])
@@ -173,7 +166,7 @@ def get_protected(items: Iterable[modo.Item], types, options: UserOptions):
         if item.parents:
             filtered.update(item.parents)
         # add environment children
-        isEnvironment = item.type == h3du.itype_str(c.ENVIRONMENT_TYPE)
+        isEnvironment = item.type == itype_str(c.ENVIRONMENT_TYPE)
         if isEnvironment and not options.del_environments:
             filtered.update(get_environment_collection(item))
 
@@ -196,7 +189,7 @@ def get_root_assemblies(assemblies):
 def delete_item(item):
     h3dd.print_debug(
         "removing <{}> {} {} ...".format(
-            h3dd.get_name(item), item, h3du.safe_type(item)
+            h3dd.get_name(item), item, safe_type(item)
         ),
         indent=1,
     )
@@ -220,7 +213,7 @@ def remove_items_from_scene(items):
     items = items - assemblies
 
     # process groups
-    groups = set(i for i in items if h3du.safe_type(i) == "group")
+    groups = set(i for i in items if safe_type(i) == "group")
     h3dd.print_debug("Remove groups:")
     for group in groups:
         delete_item(group)
@@ -228,7 +221,7 @@ def remove_items_from_scene(items):
     items = items - groups
 
     # remove all environments
-    environments = set(i for i in items if i.type == h3du.itype_str(c.ENVIRONMENT_TYPE))
+    environments = set(i for i in items if i.type == itype_str(c.ENVIRONMENT_TYPE))
     duplicates = set()
     if len(environments) == 1:
         for env in environments:
@@ -304,47 +297,47 @@ def main():
     print("")
     print("meshref_cleanup.py start...")
 
-    filter_types = {h3du.itype_str(c.MESH_TYPE), h3du.itype_str(c.MORPHDEFORM_TYPE)}
+    filter_types = {itype_str(c.MESH_TYPE), itype_str(c.MORPHDEFORM_TYPE)}
 
     opt = UserOptions()
 
-    opt.del_mesh_instance = h3du.get_user_value(USERVAL_NAME_CMR_DEL_MESH_INSTANCE)
-    opt.mesh_instance_to_mesh = h3du.get_user_value(
+    opt.del_mesh_instance = get_user_value(USERVAL_NAME_CMR_DEL_MESH_INSTANCE)
+    opt.mesh_instance_to_mesh = get_user_value(
         USERVAL_NAME_CMR_MESH_INSTANCE_TO_MESH
     )
-    opt.mesh_instance_to_loc = h3du.get_user_value(
+    opt.mesh_instance_to_loc = get_user_value(
         USERVAL_NAME_CMR_MESH_INSTANCE_TO_LOC
     )
-    opt.del_void_mesh = h3du.get_user_value(USERVAL_NAME_CMR_DEL_VOID_MESH)
-    opt.del_loc = h3du.get_user_value(USERVAL_NAME_CMR_DEL_LOC)
-    opt.del_grp_loc = h3du.get_user_value(USERVAL_NAME_CMR_DEL_GRP_LOC)
-    opt.del_assembly = h3du.get_user_value(USERVAL_NAME_CMR_DEL_ASSEMBLY)
-    opt.del_group = h3du.get_user_value(USERVAL_NAME_CMR_DEL_GROUP)
-    opt.del_polygon_part = h3du.get_user_value(USERVAL_NAME_CMR_DEL_POLYGON_PART_TAG)
-    opt.flatten_scene = h3du.get_user_value(USERVAL_NAME_CMR_FLATTEN_SCENE)
-    opt.loc_size = h3du.get_user_value(USERVAL_NAME_CMR_MESH_LOC_SIZE)
-    opt.del_environments = h3du.get_user_value(USERVAL_NAME_CMR_DEL_ENVIRONMENT)
-    opt.del_materials = h3du.get_user_value(USERVAL_NAME_CMR_DEL_MATERIAL)
+    opt.del_void_mesh = get_user_value(USERVAL_NAME_CMR_DEL_VOID_MESH)
+    opt.del_loc = get_user_value(USERVAL_NAME_CMR_DEL_LOC)
+    opt.del_grp_loc = get_user_value(USERVAL_NAME_CMR_DEL_GRP_LOC)
+    opt.del_assembly = get_user_value(USERVAL_NAME_CMR_DEL_ASSEMBLY)
+    opt.del_group = get_user_value(USERVAL_NAME_CMR_DEL_GROUP)
+    opt.del_polygon_part = get_user_value(USERVAL_NAME_CMR_DEL_POLYGON_PART_TAG)
+    opt.flatten_scene = get_user_value(USERVAL_NAME_CMR_FLATTEN_SCENE)
+    opt.loc_size = get_user_value(USERVAL_NAME_CMR_MESH_LOC_SIZE)
+    opt.del_environments = get_user_value(USERVAL_NAME_CMR_DEL_ENVIRONMENT)
+    opt.del_materials = get_user_value(USERVAL_NAME_CMR_DEL_MATERIAL)
 
     # update safe types according to user options
     if not opt.del_mesh_instance:
-        filter_types.add(h3du.itype_str(c.MESHINST_TYPE))
+        filter_types.add(itype_str(c.MESHINST_TYPE))
     if opt.mesh_instance_to_mesh:
-        filter_types.add(h3du.itype_str(c.MESHINST_TYPE))
+        filter_types.add(itype_str(c.MESHINST_TYPE))
     if not opt.del_loc:
-        filter_types.add(h3du.itype_str(c.LOCATOR_TYPE))
+        filter_types.add(itype_str(c.LOCATOR_TYPE))
     if not opt.del_grp_loc:
-        filter_types.add(h3du.itype_str(c.GROUPLOCATOR_TYPE))
+        filter_types.add(itype_str(c.GROUPLOCATOR_TYPE))
     if not opt.del_assembly:
         filter_types.add("assembly")
     if not opt.del_group:
-        filter_types.add(h3du.itype_str(c.GROUP_TYPE))
+        filter_types.add(itype_str(c.GROUP_TYPE))
     if not opt.del_environments:
-        filter_types.add(h3du.itype_str(c.ENVIRONMENT_TYPE))
+        filter_types.add(itype_str(c.ENVIRONMENT_TYPE))
     if not opt.del_materials:
-        filter_types.add(h3du.itype_str(c.MASK_TYPE))
-        filter_types.add(h3du.itype_str(c.ADVANCEDMATERIAL_TYPE))
-        filter_types.add(h3du.itype_str(c.DEFAULTSHADER_TYPE))
+        filter_types.add(itype_str(c.MASK_TYPE))
+        filter_types.add(itype_str(c.ADVANCEDMATERIAL_TYPE))
+        filter_types.add(itype_str(c.DEFAULTSHADER_TYPE))
 
     # flatten scene hierarchy
     if opt.flatten_scene:
@@ -407,6 +400,6 @@ def main():
 
 if __name__ == "__main__":
     h3dd = H3dDebug(
-        enable=False, file=h3du.replace_file_ext(modo.Scene().filename, ".log")
+        enable=False, file=replace_file_ext(modo.Scene().filename, ".log")
     )
     main()

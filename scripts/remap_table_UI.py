@@ -8,26 +8,20 @@
 # materials remap modo UI (color material map)
 # remap_table_UI v1.12
 
-import modo
-import lx
 import os.path
-import modo.constants as c
 import sys
+import lx
+import modo
+import modo.constants as c
 
-sys.path.append(
-    "{}\\scripts".format(lx.eval("query platformservice alias ? {kit_h3d_utilites:}"))
-)
-import h3d_utils as h3du
-from h3d_debug import H3dDebug
+import h3d_cad2modo.scripts.h3d_kit_constants as h3dc
 
-sys.path.append(
-    "{}\\scripts".format(lx.eval("query platformservice alias ? {kit_h3d_cad2modo:}"))
-)
-import h3d_kit_constants as h3dc
+from h3d_utilites.scripts.h3d_utils import get_user_value, set_user_value, is_material_ptyp, replace_file_ext
+from h3d_utilites.scripts.h3d_debug import H3dDebug
 
 
 def get_page_start():
-    page_start = h3du.get_user_value(h3dc.USERVAL_NAME_PAGE_START)
+    page_start = get_user_value(h3dc.USERVAL_NAME_PAGE_START)
     return page_start
 
 
@@ -36,7 +30,7 @@ def set_page_start(start, tags):
         start = len(tags) - 1
     if start < 1:
         start = 1
-    h3du.set_user_value(h3dc.USERVAL_NAME_PAGE_START, start)
+    set_user_value(h3dc.USERVAL_NAME_PAGE_START, start)
     return get_page_start()
 
 
@@ -98,12 +92,12 @@ def get_tags_list(mode):
                 )
             )
         # store colors string
-        h3du.set_user_value(h3dc.USERVAL_NAME_COLORS_STORE, colors_string_store)
+        set_user_value(h3dc.USERVAL_NAME_COLORS_STORE, colors_string_store)
 
     else:
         # read colors list from user value
         try:
-            colors_string_store = h3du.get_user_value(h3dc.USERVAL_NAME_COLORS_STORE)
+            colors_string_store = get_user_value(h3dc.USERVAL_NAME_COLORS_STORE)
             tags.extend(colors_string_store.split(";"))
         except RuntimeError:
             print("The scene is not scanned. Press the <scan scene> button to scan.")
@@ -152,10 +146,10 @@ def get_materials_list(mode, tags):
                 )
             )
         # store materials string
-        h3du.set_user_value(h3dc.USERVAL_NAME_MATERIALS_STORE, materials_string_store)
+        set_user_value(h3dc.USERVAL_NAME_MATERIALS_STORE, materials_string_store)
     else:
         # read materials list from user value
-        materials_string_store = h3du.get_user_value(h3dc.USERVAL_NAME_MATERIALS_STORE)
+        materials_string_store = get_user_value(h3dc.USERVAL_NAME_MATERIALS_STORE)
         materials = list(materials_string_store.split("\t"))
 
     return materials
@@ -213,7 +207,7 @@ def update_table(tags, start):
             )
         )
         sys.exit()
-    tags_materials_map_store_string = h3du.get_user_value(h3dc.USERVAL_NAME_MAP_STORE)
+    tags_materials_map_store_string = get_user_value(h3dc.USERVAL_NAME_MAP_STORE)
     tags_materials_map = [int(x) for x in tags_materials_map_store_string.split(";")]
 
     for index in range(start, finish):
@@ -223,7 +217,7 @@ def update_table(tags, start):
     tags_materials_map_store_string = ";".join(
         ["{}".format(x) for x in tags_materials_map]
     )  # compose string
-    h3du.set_user_value(
+    set_user_value(
         h3dc.USERVAL_NAME_MAP_STORE, tags_materials_map_store_string
     )  # store to config
 
@@ -245,7 +239,7 @@ def get_material_ui(ui_line):
             )
         )
         return None
-    return h3du.get_user_value(user_value_name_material)
+    return get_user_value(user_value_name_material)
 
 
 def clear_table_ui():
@@ -295,7 +289,7 @@ def build_line(ui_line, map_index, tags, materials, tags_materials_map):
     lx.eval("user.defNew {} type:color life:temporary".format(user_value_name_color))
     # set color for UI element
     float_color_str = get_float_color_str_from_mask(tags[map_index])
-    h3du.set_user_value(user_value_name_color, float_color_str)
+    set_user_value(user_value_name_color, float_color_str)
     # select line with zero-based index
     lx.eval("select.attr {{93645054749:sheet/{}}} set".format(ui_line - 1))
     cur_line = lx.eval("select.attr ?")
@@ -332,7 +326,7 @@ def build_line(ui_line, map_index, tags, materials, tags_materials_map):
             user_value_name_material, tags[map_index]
         )
     )
-    h3du.set_user_value(user_value_name_material, tags_materials_map[map_index])
+    set_user_value(user_value_name_material, tags_materials_map[map_index])
     # select line target material element and assign tooltip
     lx.eval("select.attr {{{}/{}}} set".format(cur_line, h3dc.TARGET_TAG_ID))
     lx.eval(
@@ -399,9 +393,9 @@ def scan_init(tags, materials):
             )
         )
     if len(tags) - 1 <= PAGE_SIZE:
-        h3du.set_user_value(h3dc.USERVAL_NAME_OVERSIZE, False)
+        set_user_value(h3dc.USERVAL_NAME_OVERSIZE, False)
     else:
-        h3du.set_user_value(h3dc.USERVAL_NAME_OVERSIZE, True)
+        set_user_value(h3dc.USERVAL_NAME_OVERSIZE, True)
     set_page_start(tags=tags, start=1)
     tag_material_map = list()
     if not lx.eval(
@@ -414,7 +408,7 @@ def scan_init(tags, materials):
                 h3dc.USERVAL_NAME_MATERIAL_DEFAULT
             )
         )
-    h3du.set_user_value(h3dc.USERVAL_NAME_MATERIAL_DEFAULT, 0)
+    set_user_value(h3dc.USERVAL_NAME_MATERIAL_DEFAULT, 0)
     # initiate tags_materials_map
     for i in range(1, len(tags)):
         # tag_material_map.append(i if i < materials_count else 0)
@@ -444,7 +438,7 @@ def scan_init(tags, materials):
                 h3dc.USERVAL_NAME_MAP_STORE
             )
         )
-    h3du.set_user_value(
+    set_user_value(
         h3dc.USERVAL_NAME_MAP_STORE, tags_materials_map_store_string
     )  # store to config
 
@@ -545,7 +539,7 @@ def get_load_map_filename():
 
 
 def get_default_load_map_filename():
-    config_default_filename = h3du.get_user_value(h3dc.USERVAL_NAME_DEF_MAP_PATH)
+    config_default_filename = get_user_value(h3dc.USERVAL_NAME_DEF_MAP_PATH)
     if os.path.exists(config_default_filename):
         print("default map table path:<{}>".format(config_default_filename))
         return config_default_filename
@@ -646,7 +640,7 @@ def select_polygons_by_tag(select_material_tag):
     for mask in modo.scene.current().items(itype=c.MASK_TYPE):
         if mask.channel("ptyp") is None:
             continue
-        if not h3du.is_material_ptyp(mask.channel("ptyp").get()):
+        if not is_material_ptyp(mask.channel("ptyp").get()):
             continue
         if (
             mask.channel("ptag").get().replace(h3dc.MATERIAL_SUFFIX, "")
@@ -718,7 +712,7 @@ def main():
 
     # get remap table page size from config
     global PAGE_SIZE
-    PAGE_SIZE = h3du.get_user_value(h3dc.USERVAL_NAME_PAGE_SIZE)
+    PAGE_SIZE = get_user_value(h3dc.USERVAL_NAME_PAGE_SIZE)
 
     run_mode = read_args()
     global_tags = get_tags_list(mode=run_mode)
@@ -829,6 +823,6 @@ def main():
 if __name__ == "__main__":
     PAGE_SIZE = 0
     h3dd = H3dDebug(
-        enable=False, file=h3du.replace_file_ext(modo.Scene().filename, ".log")
+        enable=False, file=replace_file_ext(modo.Scene().filename, ".log")
     )
     main()

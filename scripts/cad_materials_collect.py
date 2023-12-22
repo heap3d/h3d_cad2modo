@@ -10,23 +10,21 @@
 import modo
 import modo.constants as c
 import lx
-import sys
 
-sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_utilites:}')))
-import h3d_utils as h3du
-from h3d_debug import H3dDebug
-from h3d_exceptions import H3dExitException
-sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
-import h3d_kit_constants as h3dc
-from ptag_to_selection_set import ptag_to_selection_set
-from unassigned_ptags import assign_materials_to_unassigned_ptags
+from h3d_utilites.scripts.h3d_utils import itype_str, remove_if_exist, replace_file_ext
+from h3d_utilites.scripts.h3d_debug import H3dDebug
+from h3d_utilites.scripts.h3d_exceptions import H3dExitException
+
+import h3d_cad2modo.scripts.h3d_kit_constants as h3dc
+from h3d_cad2modo.scripts.ptag_to_selection_set import ptag_to_selection_set
+from h3d_cad2modo.scripts.unassigned_ptags import assign_materials_to_unassigned_ptags
 
 
 def get_materials_from_masks(masks):
     materials = []
     for mask in masks:
         for child in mask.children():
-            if child.type == h3du.itype_str(c.ADVANCEDMATERIAL_TYPE):
+            if child.type == itype_str(c.ADVANCEDMATERIAL_TYPE):
                 materials.append(child)
 
     return materials
@@ -112,7 +110,7 @@ def get_selected_masks():
 def is_simple_mask(mask):
     if len(mask.children(recursive=True)) != 1:
         return False
-    if mask.children()[0].type != h3du.itype_str(c.ADVANCEDMATERIAL_TYPE):
+    if mask.children()[0].type != itype_str(c.ADVANCEDMATERIAL_TYPE):
         return False
 
     return True
@@ -131,7 +129,7 @@ def get_siblings(mask):
         return None
     if mask.parent is None:
         return []
-    if mask.parent.type == h3du.itype_str(c.POLYRENDER_TYPE):
+    if mask.parent.type == itype_str(c.POLYRENDER_TYPE):
         return []
 
     return [item for item in mask.parent.childrenByType(itype=c.MASK_TYPE) if item != mask]
@@ -174,7 +172,7 @@ def get_validated_simple_masks(simple_masks):
         if any(not is_simple_mask(item) for item in siblings):
             continue
         parents = mask.parents
-        parents_masks = [item for item in parents if item.type == h3du.itype_str(c.MASK_TYPE)]
+        parents_masks = [item for item in parents if item.type == itype_str(c.MASK_TYPE)]
         if any(item.channel('ptyp').get() == 'Material' for item in parents_masks):
             continue
         validated_simple_masks.add(mask)
@@ -293,7 +291,7 @@ def main():
 
     # remove material mask items in the list
     for item in remove_list:
-        h3du.remove_if_exist(item, children=True)
+        remove_if_exist(item, children=True)
 
     # assign new materials wich are not assigned yet
     meshes = set(modo.Scene().meshes)
@@ -305,7 +303,7 @@ def main():
     print('cad_materials_collect.py done.')
 
 
-log_name = h3du.replace_file_ext(modo.scene.current().name)
+log_name = replace_file_ext(modo.scene.current().name)
 h3dd = H3dDebug(enable=False, file=log_name)
 
 if __name__ == '__main__':

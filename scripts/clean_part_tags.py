@@ -10,10 +10,8 @@
 import modo
 import modo.constants as c
 import lx
-import sys
 
-sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
-from cad_materials_collect import set_polygon_part
+from h3d_cad2modo.scripts.cad_materials_collect import set_polygon_part
 
 
 def main():

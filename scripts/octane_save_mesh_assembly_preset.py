@@ -11,12 +11,10 @@ import modo
 import modo.constants as c
 import lx
 import os.path
-import sys
 
-sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_utilites:}')))
-import h3d_utils as h3du
-sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
-import h3d_kit_constants as h3dc
+from h3d_utilites.scripts.h3d_utils import get_user_value
+
+import h3d_cad2modo.scripts.h3d_kit_constants as h3dc
 
 
 def save_solo_mesh_as_mesh_assembly_preset(mesh):
@@ -82,7 +80,7 @@ def main():
     print('octane_save_mesh_assembly_preset.py done.')
 
 
-REFLIB_DIR = h3du.get_user_value(h3dc.USER_VAL_REFLIB_DIR_NAME)
+REFLIB_DIR = get_user_value(h3dc.USER_VAL_REFLIB_DIR_NAME)
 
 if __name__ == '__main__':
     main()

@@ -1,3 +1,12 @@
+#!/usr/bin/python
+# ================================
+# (C)2022 Dmytro Holub
+# heap3d@gmail.com
+# --------------------------------
+# modo python
+# EMAG
+# polygon tag to selection set converter
+
 import modo
 import lx
 import modo.constants as c

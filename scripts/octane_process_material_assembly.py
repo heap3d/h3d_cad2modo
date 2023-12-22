@@ -14,12 +14,10 @@ import modo.constants as c
 import lx
 import math
 import os.path
-import sys
 
-sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_utilites:}')))
-import h3d_utils as h3du
-sys.path.append('{}\\scripts'.format(lx.eval('query platformservice alias ? {kit_h3d_cad2modo:}')))
-import h3d_kit_constants as h3dc
+from h3d_utilites.scripts.h3d_utils import get_user_value
+
+import h3d_cad2modo.scripts.h3d_kit_constants as h3dc
 
 
 def is_empty_assembly(item):
@@ -164,17 +162,17 @@ def main():
 
     opt = UiOptions()
     # get user values from UI
-    opt.CAM_ROT_X = math.degrees(h3du.get_user_value(h3dc.USER_VAL_CAM_ROT_X_NAME))
-    opt.CAM_ROT_Y = math.degrees(h3du.get_user_value(h3dc.USER_VAL_CAM_ROT_Y_NAME))
-    opt.ENV_ROT_Y = math.degrees(h3du.get_user_value(h3dc.USER_VAL_ENV_ROT_Y_NAME))
-    opt.ENV_PATH = h3du.get_user_value(h3dc.USER_VAL_ENV_PATH_NAME)
-    opt.STORE_DIR = h3du.get_user_value(h3dc.USER_VAL_STORE_DIR_NAME)
-    opt.SAVE_ENABLED = h3du.get_user_value(h3dc.USER_VAL_SAVE_ENABLED_NAME)
-    opt.REND_SETUP = h3du.get_user_value(h3dc.USER_VAL_REND_SETUP_NAME)
-    opt.OCTMAT_SETUP = h3du.get_user_value(h3dc.USER_VAL_OCTMAT_SETUP_NAME)
-    opt.LIGHT_SETUP = h3du.get_user_value(h3dc.USER_VAL_LIGHT_SETUP_NAME)
-    opt.CAM_SETUP = h3du.get_user_value(h3dc.USER_VAL_CAM_SETUP_NAME)
-    opt.ENV_SETUP = h3du.get_user_value(h3dc.USER_VAL_ENV_SETUP_NAME)
+    opt.CAM_ROT_X = math.degrees(get_user_value(h3dc.USER_VAL_CAM_ROT_X_NAME))
+    opt.CAM_ROT_Y = math.degrees(get_user_value(h3dc.USER_VAL_CAM_ROT_Y_NAME))
+    opt.ENV_ROT_Y = math.degrees(get_user_value(h3dc.USER_VAL_ENV_ROT_Y_NAME))
+    opt.ENV_PATH = get_user_value(h3dc.USER_VAL_ENV_PATH_NAME)
+    opt.STORE_DIR = get_user_value(h3dc.USER_VAL_STORE_DIR_NAME)
+    opt.SAVE_ENABLED = get_user_value(h3dc.USER_VAL_SAVE_ENABLED_NAME)
+    opt.REND_SETUP = get_user_value(h3dc.USER_VAL_REND_SETUP_NAME)
+    opt.OCTMAT_SETUP = get_user_value(h3dc.USER_VAL_OCTMAT_SETUP_NAME)
+    opt.LIGHT_SETUP = get_user_value(h3dc.USER_VAL_LIGHT_SETUP_NAME)
+    opt.CAM_SETUP = get_user_value(h3dc.USER_VAL_CAM_SETUP_NAME)
+    opt.ENV_SETUP = get_user_value(h3dc.USER_VAL_ENV_SETUP_NAME)
 
     # global SAVE_ENABLED
     # global REND_SETUP
