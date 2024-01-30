@@ -1,11 +1,15 @@
 #!/usr/bin/python
 # ================================
-# (C)2022-2023 Dmytro Holub
+# (C)2022-2024 Dmytro Holub
 # heap3d@gmail.com
 # --------------------------------
 # modo python
 # EMAG
 # cleanup meshref scene file
+
+# ========================
+# TODO keep mesh operators
+# ========================
 
 from typing import Iterable
 import lx
@@ -144,12 +148,12 @@ def get_environment_collection(item: modo.Item):
     """get environment's children and connected items"""
     env_collection = item.children(recursive=True)
     for child in env_collection:
-        env_collection.extend(get_connected(child))
+        env_collection.extend(get_connected(child))  # type: ignore
 
     return env_collection
 
 
-def get_protected(items: Iterable[modo.Item], types, options: UserOptions):
+def get_protected(items: Iterable[modo.Item], types, options: UserOptions) -> set[modo.Item]:
     """gets list of items with a specific types according to options"""
     # collect Protected items
     filtered = set()
@@ -293,6 +297,49 @@ def mesh_instance_to_loc(meshinst):
     return modo.Scene().selectedByType(itype=c.LOCATOR_TYPE)[0]
 
 
+def get_connected_items(item: modo.Item, connected_items: set[modo.Item]) -> set[modo.Item]:
+    if not item:
+        return set()
+    if item.type == 'itemGroups':
+        return set()
+    if item.type == 'xfrmCore':
+        return set()
+    if item.type == 'schmItem':
+        return set()
+
+    if item in connected_items:
+        return set()
+
+    connections: set[modo.Item] = set()
+    for graph in item.itemGraphs:
+        forward_connections = graph.forward()
+        reverse_connections = graph.reverse()
+        if forward_connections:
+            connections = connections.union(forward_connections)
+        if reverse_connections:
+            connections = connections.union(reverse_connections)
+
+        connected_items.add(item)
+
+    for recursive_item in connections:
+        connections = connections.union(get_connected_items(recursive_item, connected_items))
+
+    return connections
+
+
+def get_protected_connected_items(items: set[modo.Item]) -> set[modo.Item]:
+    if not items:
+        return set()
+    protected_connected_items: set[modo.Item] = set()
+    for item in items:
+        connected_items = get_connected_items(item, protected_connected_items)
+        protected_connected_items = protected_connected_items.union(connected_items)
+
+    h3dd.print_items(protected_connected_items, 'protected_connected_items:')
+
+    return protected_connected_items
+
+
 def main():
     print("")
     print("meshref_cleanup.py start...")
@@ -343,9 +390,10 @@ def main():
     if opt.flatten_scene:
         flatten_scene_hierarchy()
 
-    scene_items = set(modo.scene.current().items())
+    scene_items = set(modo.Scene().items())
     protected_items = get_protected(scene_items, filter_types, opt)
-    items_to_delete = scene_items - protected_items
+    protected_connected_items = get_protected_connected_items(protected_items)
+    items_to_delete = scene_items - protected_items - protected_connected_items
 
     h3dd.print_items(filter_types, "Filter types:")
     h3dd.print_items(protected_items, "Protected items:")
@@ -400,6 +448,6 @@ def main():
 
 if __name__ == "__main__":
     h3dd = H3dDebug(
-        enable=False, file=replace_file_ext(modo.Scene().filename, ".log")
+        enable=True, file=replace_file_ext(modo.Scene().filename, ".log")
     )
     main()
