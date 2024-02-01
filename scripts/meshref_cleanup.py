@@ -139,22 +139,45 @@ def get_static_protected():
     return static_protected
 
 
-def get_connected(item: modo.Item):
-    """get connected items"""
-    return item.itemGraph("shadeLoc").connectedItems["Forward"]
+def get_connected_shader_items(item: modo.Item) -> list[modo.Item]:
+    """get connected items from item graph shadeLoc for specified item
+
+    Args:
+        item (modo.Item): item to get connections
+
+    Returns:
+        list[modo.Item]: list of connected items
+    """
+    return item.itemGraph("shadeLoc").connectedItems["Forward"]  # type: ignore
 
 
-def get_environment_collection(item: modo.Item):
-    """get environment's children and connected items"""
+def get_environment_collection(item: modo.Item) -> list[modo.Item]:
+    """get environment's children and connected items
+
+    Args:
+        item (modo.Item): item to get collection
+
+    Returns:
+        list[modo.Item]: list of children and connected items
+    """
     env_collection = item.children(recursive=True)
     for child in env_collection:
-        env_collection.extend(get_connected(child))  # type: ignore
+        env_collection.extend(get_connected_shader_items(child))  # type: ignore
 
     return env_collection
 
 
-def get_protected(items: Iterable[modo.Item], types, options: UserOptions) -> set[modo.Item]:
-    """gets list of items with a specific types according to options"""
+def get_protected(items: Iterable[modo.Item], types: set[str], options: UserOptions) -> set[modo.Item]:
+    """gets list of items prohibited to remove from the scene
+
+    Args:
+        items (Iterable[modo.Item]): list of items to filter
+        types (set[str]): set of types to filter
+        options (UserOptions): user options to filter
+
+    Returns:
+        set[modo.Item]: set of filtered items ptohibited to remove from the scene
+    """
     # collect Protected items
     filtered = set()
     filtered.update(get_static_protected())
@@ -177,7 +200,7 @@ def get_protected(items: Iterable[modo.Item], types, options: UserOptions) -> se
     return filtered
 
 
-def clear_assemblies(assemblies):
+def clear_assemblies(assemblies: Iterable[modo.Item]) -> None:
     for assembly in assemblies:
         # check if any items in the assembly
         if not assembly.itemGraph("itemGroups").forward():
@@ -186,7 +209,7 @@ def clear_assemblies(assemblies):
         lx.eval("group.edit clr all")
 
 
-def get_root_assemblies(assemblies):
+def get_root_assemblies(assemblies) -> set[modo.Item]:
     return set(i for i in assemblies if not i.parent)
 
 
@@ -266,9 +289,13 @@ def add_base_material():
     h3dd.print_debug("done.")
 
 
-def set_polygon_part(mesh, part_tag="Default"):
-    mesh.select(replace=True)
-    lx.eval('poly.setPart "{}"'.format(part_tag))
+def set_polygon_part(mesh: modo.Item, part_tag: str = "Default"):
+    h3dd.print_debug(f'mesh:<{mesh.name}> type:<{mesh.type}> super:<{mesh.superType}>', 1)
+    try:
+        mesh.select(replace=True)
+        lx.eval('!poly.setPart "{}"'.format(part_tag))
+    except RuntimeError as e:
+        h3dd.print_debug(f'Runtime Error: <{e}>', 2)
 
 
 def flatten_scene_hierarchy():
@@ -297,45 +324,70 @@ def mesh_instance_to_loc(meshinst):
     return modo.Scene().selectedByType(itype=c.LOCATOR_TYPE)[0]
 
 
-def get_connected_items(item: modo.Item, connected_items: set[modo.Item]) -> set[modo.Item]:
+def get_connected_items(item: modo.Item, known_items: set[modo.Item]) -> set[modo.Item]:
+    h3dd.print_debug(f'get_connected_items() {item.name} : {item.type} : {item.superType}', 1)
     if not item:
+        h3dd.print_debug('not item. skipped', 2)
         return set()
-    if item.type == 'itemGroups':
-        return set()
-    if item.type == 'xfrmCore':
-        return set()
-    if item.type == 'schmItem':
+    if item.superType == 'transform':
+        h3dd.print_debug('transform. skipped', 2)
         return set()
 
-    if item in connected_items:
+    if item.type == 'assembly':
+        h3dd.print_debug('assenbly. skipped', 2)
+
+    if item in known_items:
+        h3dd.print_debug('known item. skipped', 2)
         return set()
+
+    h3dd.print_debug('proceed...', 2)
 
     connections: set[modo.Item] = set()
     for graph in item.itemGraphs:
+        h3dd.print_debug(f'graph:{graph.type}', 3)
+        if graph.type == 'itemGroups':
+            h3dd.print_debug('itemGroups. skipped.', 3)
+            continue
+        if graph.type == 'schmNode':
+            h3dd.print_debug('schmNode. skipped.', 3)
+            continue
+        if graph.type == 'xfrmCore':
+            h3dd.print_debug('xfrmCore. skipped.', 3)
+            continue
+        if graph.type == 'scene':
+            h3dd.print_debug('scene. skipped.', 3)
+            continue
+        h3dd.print_debug('proceed...', 3)
         forward_connections = graph.forward()
         reverse_connections = graph.reverse()
         if forward_connections:
-            connections = connections.union(forward_connections)
+            connections = connections.union(forward_connections)  # type: ignore
         if reverse_connections:
-            connections = connections.union(reverse_connections)
+            connections = connections.union(reverse_connections)  # type: ignore
 
-        connected_items.add(item)
+        known_items.add(item)
 
     for recursive_item in connections:
-        connections = connections.union(get_connected_items(recursive_item, connected_items))
+        connections = connections.union(get_connected_items(recursive_item, known_items))
 
     return connections
 
 
 def get_protected_connected_items(items: set[modo.Item]) -> set[modo.Item]:
+    # h3dd.print_items(items, 'get_protected_connected_items() input items:')
+    h3dd.print_debug('get_protected_connected_items():')
+    h3dd.indent_inc()
+
     if not items:
         return set()
     protected_connected_items: set[modo.Item] = set()
     for item in items:
+        h3dd.print_debug(f'item:<{item.name}> type:<{item.type}> super:<{item.superType}>')
         connected_items = get_connected_items(item, protected_connected_items)
         protected_connected_items = protected_connected_items.union(connected_items)
 
-    h3dd.print_items(protected_connected_items, 'protected_connected_items:')
+    h3dd.indent_dec()
+    # h3dd.print_items(protected_connected_items, 'get_protected_connected_items() protected_connected_items:')
 
     return protected_connected_items
 
@@ -349,12 +401,8 @@ def main():
     opt = UserOptions()
 
     opt.del_mesh_instance = get_user_value(USERVAL_NAME_CMR_DEL_MESH_INSTANCE)
-    opt.mesh_instance_to_mesh = get_user_value(
-        USERVAL_NAME_CMR_MESH_INSTANCE_TO_MESH
-    )
-    opt.mesh_instance_to_loc = get_user_value(
-        USERVAL_NAME_CMR_MESH_INSTANCE_TO_LOC
-    )
+    opt.mesh_instance_to_mesh = get_user_value(USERVAL_NAME_CMR_MESH_INSTANCE_TO_MESH)
+    opt.mesh_instance_to_loc = get_user_value(USERVAL_NAME_CMR_MESH_INSTANCE_TO_LOC)
     opt.del_void_mesh = get_user_value(USERVAL_NAME_CMR_DEL_VOID_MESH)
     opt.del_loc = get_user_value(USERVAL_NAME_CMR_DEL_LOC)
     opt.del_grp_loc = get_user_value(USERVAL_NAME_CMR_DEL_GRP_LOC)
@@ -397,6 +445,7 @@ def main():
 
     h3dd.print_items(filter_types, "Filter types:")
     h3dd.print_items(protected_items, "Protected items:")
+    h3dd.print_items(protected_connected_items, "Protected connected items:")
 
     remove_items_from_scene(items_to_delete)
 
@@ -409,6 +458,7 @@ def main():
 
     # process polygon parts
     if opt.del_polygon_part:
+        h3dd.print_debug('removing polygon parts:')
         for mesh in modo.Scene().items(itype=c.MESH_TYPE):
             set_polygon_part(mesh)
 
