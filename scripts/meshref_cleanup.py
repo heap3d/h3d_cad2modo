@@ -7,10 +7,6 @@
 # EMAG
 # cleanup meshref scene file
 
-# ========================
-# TODO keep mesh operators
-# ========================
-
 from typing import Iterable
 import lx
 import modo
