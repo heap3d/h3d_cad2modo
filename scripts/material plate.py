@@ -13,6 +13,8 @@ import modo
 import modo.constants as c
 import lx
 
+# TODO get materials from polygon tags
+# TODO get materials from shader tree
 
 print()
 print("start...")
