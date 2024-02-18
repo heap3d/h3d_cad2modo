@@ -100,11 +100,11 @@ def get_masks_with_item_tag(masks):
 
 
 def get_scene_masks():
-    return modo.scene.current().items(itype=c.MASK_TYPE)
+    return modo.Scene().items(itype=c.MASK_TYPE)
 
 
 def get_selected_masks():
-    return modo.scene.current().selectedByType(itype=c.MASK_TYPE)
+    return modo.Scene().selectedByType(itype=c.MASK_TYPE)
 
 
 def is_simple_mask(mask):
@@ -124,9 +124,9 @@ def has_color_prefix(mask, prefix):
     return mask.name.startswith(prefix)
 
 
-def get_siblings(mask):
+def get_siblings(mask: modo.Item) -> list[modo.Item]:
     if not mask:
-        return None
+        return []
     if mask.parent is None:
         return []
     if mask.parent.type == itype_str(c.POLYRENDER_TYPE):
@@ -190,11 +190,11 @@ def get_ptags(masks):
 
 def assign_new_materials(rgb_color_strings, duplicated_ptags):
     # select all mesh items and enter polygon mode to using selection sets
-    modo.scene.current().deselect()
+    modo.Scene().deselect()
     # enter item mode
     lx.eval('select.type item')
     # select all meshes
-    for item in modo.scene.current().items(itype=c.MESH_TYPE):
+    for item in modo.Scene().items(itype=c.MESH_TYPE):
         item.select()
     # enter polygon mode
     lx.eval('select.type polygon')
@@ -281,7 +281,7 @@ def main():
     # create list of material mask items to remove
     remove_list = set()
     remove_list.update(validated_simple_masks)
-    item_masks = get_masks_with_item_tag(modo.scene.current().items(itype=c.MASK_TYPE))
+    item_masks = get_masks_with_item_tag(modo.Scene().items(itype=c.MASK_TYPE))
 
     # add item masks to remove_list if no used materials in there
     for item_mask in item_masks:
@@ -303,7 +303,7 @@ def main():
     print('cad_materials_collect.py done.')
 
 
-log_name = replace_file_ext(modo.scene.current().name)
+log_name = replace_file_ext(modo.Scene().name)
 h3dd = H3dDebug(enable=False, file=log_name)
 
 if __name__ == '__main__':
