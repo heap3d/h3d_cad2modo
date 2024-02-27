@@ -123,7 +123,6 @@ def get_static_protected():
         for i in modo.Scene().items(itype=c.ADVANCEDMATERIAL_TYPE)
         if (i.parent is None or i.parent.type == itype_str(c.POLYRENDER_TYPE))
     ]
-    h3dd.print_items(root_mats, "roots mats:")
     static_protected.update(root_mats[:1])
     # Transforms
     transforms = set(
@@ -176,30 +175,22 @@ def get_protected(items: Iterable[modo.Item], types: set[str], options: UserOpti
     # collect Protected items
     filtered = set()
     filtered.update(get_static_protected())
-    h3dd.print_items(filtered, 'filtered static protected:')
 
     for item in items:
-        h3dd.print_debug(f'loop item:<{item.name}>')
         if item in filtered:
-            h3dd.print_debug('item in filtered. skipped.', 1)
             continue
         if not is_protected(item, types, options):
-            h3dd.print_debug('not protected. skipped.', 1)
             continue
         # add item to filtered set
         filtered.add(item)
-        h3dd.print_debug('added to protected')
         # add protected item's parents
         if item.parents:
             filtered.update(item.parents)
-            h3dd.print_items(item.parents, 'added item parents:')
         # add environment children
         isEnvironment = item.type == itype_str(c.ENVIRONMENT_TYPE)
         if isEnvironment and not options.del_environments:
             filtered.update(get_environment_collection(item))
-            h3dd.print_items(get_environment_collection(item), 'added environment collection:')
 
-    h3dd.print_items(filtered, 'return protected items:')
     return filtered
 
 
@@ -217,16 +208,9 @@ def get_root_assemblies(assemblies) -> set[modo.Item]:
 
 
 def delete_item(item):
-    h3dd.print_debug(
-        "removing <{}> {} {} ...".format(
-            h3dd.get_name(item), item, safe_type(item)
-        ),
-        indent=1,
-    )
     try:
         item.select(replace=True)
     except LookupError:
-        h3dd.print_debug("item not found!", indent=2)
         return
     modo.Scene().removeItems(item)
 
@@ -236,18 +220,14 @@ def remove_items_from_scene(items):
     assemblies = set(i for i in items if i.type == "assembly")
     clear_assemblies(assemblies)
     root_assemblies = get_root_assemblies(assemblies)
-    h3dd.print_debug("Remove assemblies:")
     for root_assembly in root_assemblies:
         delete_item(root_assembly)
-    h3dd.print_debug("done.")
     items = items - assemblies
 
     # process groups
     groups = set(i for i in items if safe_type(i) == "group")
-    h3dd.print_debug("Remove groups:")
     for group in groups:
         delete_item(group)
-    h3dd.print_debug("done.")
     items = items - groups
 
     # remove all environments
@@ -257,48 +237,36 @@ def remove_items_from_scene(items):
         for env in environments:
             duplicates.add(modo.Scene().duplicateItem(env))
     environments.update(duplicates)
-    h3dd.print_debug("Remove environments:")
     for environment in environments:
         delete_item(environment)
-    h3dd.print_debug("done.")
     items = items - environments
 
     # octane material overrides
     octane_mats = set(modo.Scene().items(itype="material.octaneRenderer"))
-    h3dd.print_debug("Remove octane materials:")
     for octane_mat in octane_mats:
         delete_item(octane_mat)
-    h3dd.print_debug("done.")
     items = items - octane_mats
 
     # delete rest of the items
-    h3dd.print_debug("Remove other items:")
     for item in items:
         delete_item(item)
-    h3dd.print_debug("done.")
 
 
 def add_base_material():
-    h3dd.print_debug("adding base material:")
-    h3dd.print_debug("creating advancedMaterial...", 1)
     modo.Scene().renderItem.select()
     lx.eval("shader.create advancedMaterial")
-    h3dd.print_debug("enabling smooth area weight...", 1)
     modo.Scene().renderItem.select()
     lx.eval("material.smoothAreaWeight area")
-    h3dd.print_debug("enabling smooth weight angle...", 1)
     modo.Scene().renderItem.select()
     lx.eval("material.smoothWeight angle true")
-    h3dd.print_debug("done.")
 
 
 def set_polygon_part(mesh: modo.Item, part_tag: str = "Default"):
-    h3dd.print_debug(f'mesh:<{mesh.name}> type:<{mesh.type}> super:<{mesh.superType}>', 1)
     try:
         mesh.select(replace=True)
         lx.eval('!poly.setPart "{}"'.format(part_tag))
     except RuntimeError as e:
-        h3dd.print_debug(f'Runtime Error: <{e}>', 2)
+        h3dd.print_debug(f'set_polygon_part() error: {e}')
 
 
 def flatten_scene_hierarchy():
@@ -311,7 +279,6 @@ def flatten_scene_hierarchy():
 
 def mesh_instance_to_mesh(meshinst):
     meshinst.select(replace=True)
-    h3dd.print_debug("<{}>    {}    {}".format(meshinst.name, meshinst, meshinst.type))
     name = meshinst.name
     lx.eval("item.setType mesh locator")
     lx.eval("item.name {{{}}} locator".format(name))
@@ -319,7 +286,6 @@ def mesh_instance_to_mesh(meshinst):
 
 
 def mesh_instance_to_loc(meshinst):
-    h3dd.print_debug("<{}>    {}    {}".format(meshinst.name, meshinst, meshinst.type))
     meshinst.select(replace=True)
     name = meshinst.name
     lx.eval("item.setType locator locator")
@@ -327,72 +293,59 @@ def mesh_instance_to_loc(meshinst):
     return modo.Scene().selectedByType(itype=c.LOCATOR_TYPE)[0]
 
 
-def get_connected_items(item: modo.Item, known_items: set[modo.Item]) -> set[modo.Item]:
-    h3dd.print_debug(f'get_connected_items(): item:<{item.name}> type:<{item.type}> super:<{item.superType}>')
+def get_connected_items_to_protect(item: modo.Item, known_items: set[modo.Item]) -> set[modo.Item]:
     if not item:
-        h3dd.print_debug('not item. skipped', 1)
         return set()
     if item.superType == 'transform':
-        h3dd.print_debug('transform. skipped', 1)
         return set()
-
-    if item.type == 'assembly':
-        h3dd.print_debug('assenbly. skipped', 1)
-
     if item in known_items:
-        h3dd.print_debug('known item. skipped', 1)
+        return set()
+    if item.type == itype_str(c.SCENE_TYPE):
+        return set()
+    if item.type == itype_str(c.ENVIRONMENT_TYPE):
+        return set()
+    if item.type == itype_str(c.SHADERFOLDER_TYPE):
+        return set()
+    if item.type == itype_str(c.POLYRENDER_TYPE):
         return set()
 
-    h3dd.print_debug(f'<{item.name}> proceed...', 1)
-
+    h3dd.print_debug(f'item: <{item.name}>:<{item.type}>')
     connections: set[modo.Item] = set()
     for graph in item.itemGraphs:
-        h3dd.print_debug(f'graph:{graph.type}', 2)
         if graph.type == 'itemGroups':
-            h3dd.print_debug('itemGroups. skipped.', 2)
             continue
         if graph.type == 'schmNode':
-            h3dd.print_debug('schmNode. skipped.', 2)
             continue
         if graph.type == 'xfrmCore':
-            h3dd.print_debug('xfrmCore. skipped.', 2)
             continue
         if graph.type == 'scene':
-            h3dd.print_debug('scene. skipped.', 2)
             continue
         forward_connections = graph.forward()
+        h3dd.print_items(forward_connections, 'forward connections:', 1)
         reverse_connections = graph.reverse()
+        h3dd.print_items(reverse_connections, 'reverse connections:', 1)
         if forward_connections:
             connections = connections.union(forward_connections)  # type: ignore
         if reverse_connections:
             connections = connections.union(reverse_connections)  # type: ignore
 
         known_items.add(item)
-        h3dd.print_debug(f'<{item.name}> added to known items', 2)
 
     for recursive_item in connections:
-        h3dd.print_debug(f'recursive item: <{recursive_item.name}>', 2)
-        h3dd.indent_inc(2)
-        connections = connections.union(get_connected_items(recursive_item, known_items))
-        h3dd.indent_dec(2)
+        connections = connections.union(get_connected_items_to_protect(recursive_item, known_items))
 
-    h3dd.print_items(connections, 'returned connections:', 2)
     return connections
 
 
 def get_protected_connected_items(items: set[modo.Item]) -> set[modo.Item]:
-    h3dd.print_debug('get_protected_connected_items():')
-    h3dd.indent_inc()
-    h3dd.print_items(items, 'input items:')
 
     if not items:
         return set()
     protected_connected_items: set[modo.Item] = set()
     for item in items:
-        connected_items = get_connected_items(item, protected_connected_items)
-        protected_connected_items = protected_connected_items.union(connected_items)
+        connected_items_to_protect = get_connected_items_to_protect(item, protected_connected_items)
+        protected_connected_items = protected_connected_items.union(connected_items_to_protect)
 
-    h3dd.indent_dec()
     return protected_connected_items
 
 
@@ -447,25 +400,16 @@ def main():
 
     scene_items = set(modo.Scene().items())
     protected_items = get_protected(scene_items, filter_types, opt)
+    h3dd.print_items(protected_items, 'protected_items:')
     protected_connected_items = get_protected_connected_items(protected_items)
     items_to_delete = scene_items - protected_items - protected_connected_items
-
-    h3dd.print_items(filter_types, "Filter types:")
-    h3dd.print_items(protected_items, "Protected items:")
-    h3dd.print_items(protected_connected_items, "Protected connected items:")
 
     remove_items_from_scene(items_to_delete)
 
     if not modo.Scene().items(itype=c.ADVANCEDMATERIAL_TYPE):
         add_base_material()
-    else:
-        h3dd.print_items(
-            modo.Scene().items(itype=c.ADVANCEDMATERIAL_TYPE), "advanced materials:"
-        )
-
     # process polygon parts
     if opt.del_polygon_part:
-        h3dd.print_debug('removing polygon parts:')
         for mesh in modo.Scene().items(itype=c.MESH_TYPE):
             set_polygon_part(mesh)
 
