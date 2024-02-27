@@ -350,9 +350,6 @@ def get_protected_connected_items(items: set[modo.Item]) -> set[modo.Item]:
 
 
 def main():
-    print("")
-    print("meshref_cleanup.py start...")
-
     filter_types = {itype_str(c.MESH_TYPE), itype_str(c.MORPHDEFORM_TYPE)}
 
     opt = UserOptions()
@@ -444,11 +441,16 @@ def main():
     for item in selection_store:
         item.select()
 
-    print("meshref_cleanup.py done.")
-
 
 if __name__ == "__main__":
+
     h3dd = H3dDebug(
         enable=False, file=replace_file_ext(modo.Scene().filename, ".log")
     )
+
+    print("")
+    print("meshref_cleanup.py start...")
+
     main()
+
+    print("meshref_cleanup.py done.")
