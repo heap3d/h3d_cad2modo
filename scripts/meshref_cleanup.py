@@ -293,12 +293,20 @@ def mesh_instance_to_loc(meshinst):
     return modo.Scene().selectedByType(itype=c.LOCATOR_TYPE)[0]
 
 
-def get_connected_items(item: modo.Item, known_items: set[modo.Item]) -> set[modo.Item]:
+def get_connected_items_to_protect(item: modo.Item, known_items: set[modo.Item]) -> set[modo.Item]:
     if not item:
         return set()
     if item.superType == 'transform':
         return set()
     if item in known_items:
+        return set()
+    if item.type == itype_str(c.SCENE_TYPE):
+        return set()
+    if item.type == itype_str(c.ENVIRONMENT_TYPE):
+        return set()
+    if item.type == itype_str(c.SHADERFOLDER_TYPE):
+        return set()
+    if item.type == itype_str(c.POLYRENDER_TYPE):
         return set()
 
     h3dd.print_debug(f'item: <{item.name}>:<{item.type}>')
@@ -313,9 +321,9 @@ def get_connected_items(item: modo.Item, known_items: set[modo.Item]) -> set[mod
         if graph.type == 'scene':
             continue
         forward_connections = graph.forward()
-        h3dd.print_items(forward_connections, 'forward connections:')
+        h3dd.print_items(forward_connections, 'forward connections:', 1)
         reverse_connections = graph.reverse()
-        h3dd.print_items(reverse_connections, 'reverse connections:')
+        h3dd.print_items(reverse_connections, 'reverse connections:', 1)
         if forward_connections:
             connections = connections.union(forward_connections)  # type: ignore
         if reverse_connections:
@@ -324,7 +332,7 @@ def get_connected_items(item: modo.Item, known_items: set[modo.Item]) -> set[mod
         known_items.add(item)
 
     for recursive_item in connections:
-        connections = connections.union(get_connected_items(recursive_item, known_items))
+        connections = connections.union(get_connected_items_to_protect(recursive_item, known_items))
 
     return connections
 
@@ -335,8 +343,8 @@ def get_protected_connected_items(items: set[modo.Item]) -> set[modo.Item]:
         return set()
     protected_connected_items: set[modo.Item] = set()
     for item in items:
-        connected_items = get_connected_items(item, protected_connected_items)
-        protected_connected_items = protected_connected_items.union(connected_items)
+        connected_items_to_protect = get_connected_items_to_protect(item, protected_connected_items)
+        protected_connected_items = protected_connected_items.union(connected_items_to_protect)
 
     return protected_connected_items
 
@@ -392,6 +400,7 @@ def main():
 
     scene_items = set(modo.Scene().items())
     protected_items = get_protected(scene_items, filter_types, opt)
+    h3dd.print_items(protected_items, 'protected_items:')
     protected_connected_items = get_protected_connected_items(protected_items)
     items_to_delete = scene_items - protected_items - protected_connected_items
 
@@ -440,6 +449,6 @@ def main():
 
 if __name__ == "__main__":
     h3dd = H3dDebug(
-        enable=True, file=replace_file_ext(modo.Scene().filename, ".log")
+        enable=False, file=replace_file_ext(modo.Scene().filename, ".log")
     )
     main()
