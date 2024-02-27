@@ -3,6 +3,7 @@
 	<kit name="h3d_cad2modo" restart="YES">
 		<source target="h3d_cad2modo/index.CFG">index.CFG</source>
 		<source target="h3d_cad2modo/scripts/add_materials_by_tag_name.py">scripts/add_materials_by_tag_name.py</source>
+		<source target="h3d_cad2modo/scripts/add_materials_by_tag_name_selected_mesh.py">scripts/add_materials_by_tag_name_selected_mesh.py</source>
 		<source target="h3d_cad2modo/scripts/material plate.py">scripts/material plate.py</source>
 		<source target="h3d_cad2modo/scripts/cad_materials_collect.py">scripts/cad_materials_collect.py</source>
 		<source target="h3d_cad2modo/scripts/channel_key_reduce.py">scripts/channel_key_reduce.py</source>
