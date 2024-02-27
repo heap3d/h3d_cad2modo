@@ -13,54 +13,53 @@ import modo
 import modo.constants as c
 import lx
 
-# TODO get materials from polygon tags
-# TODO get materials from shader tree
 
-print()
-print("start...")
+def main():
+    scene = modo.Scene()
+    # get materials from shader tree
+    shader_tree_materials = []
+    for material_mask in scene.items("mask"):
+        # get material_mask children
+        if len(material_mask.childrenByType(c.ADVANCEDMATERIAL_TYPE)) > 0:
+            shader_tree_materials.append(material_mask)
 
-scene = modo.scene.current()
-# get materials list
-material_library = []
-for material_mask in scene.items("mask"):
-    # get material_mask children
-    if len(material_mask.childrenByType(c.ADVANCEDMATERIAL_TYPE)) > 0:
-        material_library.append(material_mask)
-
-# get polygons list
-meshes = scene.items("mesh", "material plate")
-if not meshes:
-    # add unit plane item
-    lx.eval('script.run "macro.scriptservice:32235733444:macro"')
-    # rename mesh
-    lx.eval('item.name "material plate" mesh')
+    # get polygons list
     meshes = scene.items("mesh", "material plate")
+    if not meshes:
+        # add unit plane item
+        lx.eval('script.run "macro.scriptservice:32235733444:macro"')
+    # rename mesh
+        lx.eval('item.name "material plate" mesh')
+        meshes = scene.items("mesh", "material plate")
 
-material_plate_mesh = meshes[0]  # type: modo.source_item.Mesh
-material_plate_mesh.select(replace=True)
-if material_plate_mesh.parent:
-    lx.eval("item.parent parent:{}")
-lx.eval("item.editorColor red")
+    material_plate_mesh: modo.Item = meshes[0]
+    material_plate_mesh.select(replace=True)
+    if material_plate_mesh.parent:
+        lx.eval("item.parent parent:{}")
+    lx.eval("item.editorColor red")
 
-# subdivide mesh until polygons count exceeds materials count
-while len(material_plate_mesh.geometry.polygons) < len(material_library):
-    lx.eval("poly.subdivide flat 0.0")
+    # subdivide mesh until polygons count exceeds materials count
+    while len(material_plate_mesh.geometry.polygons) < len(shader_tree_materials):
+        lx.eval("poly.subdivide flat 0.0")
 
-lx.eval("select.type polygon")
-for polygon in material_plate_mesh.geometry.polygons:
-    if polygon.index < len(material_library):
-        materialTag = material_library[polygon.index].channel("ptag").get()
+    lx.eval("select.type polygon")
+    for polygon in material_plate_mesh.geometry.polygons:
+        if polygon.index < len(shader_tree_materials):
+            materialTag = shader_tree_materials[polygon.index].channel("ptag").get()
 
         #  select polygon and assign material to it
-        polygon.select(replace=True)
-        if not materialTag:
-            continue
-        lx.eval('poly.setMaterial "{}"'.format(materialTag))
+            polygon.select(replace=True)
+            if not materialTag:
+                continue
+            lx.eval('poly.setMaterial "{}"'.format(materialTag))
 
-print(
-    "materials/polygons: {}/{}".format(
-        len(material_library), material_plate_mesh.geometry.numPolygons
-    )
-)
+    print("materials/polygons: {}/{}".format(len(shader_tree_materials), material_plate_mesh.geometry.numPolygons))
 
-print("finished!")
+
+if __name__ == '__main__':
+    print()
+    print("material plate.py start...")
+
+    main()
+
+    print("material plate.py finished!")
