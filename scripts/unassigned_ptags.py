@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # ================================
-# (C)2023 Dmytro Holub
+# (C)2023-2024 Dmytro Holub
 # heap3d@gmail.com
 # --------------------------------
 # modo python
@@ -11,8 +11,9 @@ import modo
 import lx
 from random import random
 
-from h3d_utilites.scripts.h3d_utils import is_material_ptyp, replace_file_ext
+from h3d_utilites.scripts.h3d_utils import is_material_ptyp, replace_file_ext, get_user_value
 from h3d_utilites.scripts.h3d_debug import H3dDebug
+import h3d_cad2modo.scripts.h3d_kit_constants as h3dc
 
 
 def get_mask_ptags(masks):
@@ -58,18 +59,25 @@ def get_color_str(input_str):
         return '{} {} {}'.format(r, g, b)
 
 
-def assign_new_material(geo_ptag):
+def assign_new_material(geo_ptag, specific_color_str=None):
     if not geo_ptag:
         return
     meshes = modo.Scene().meshes
+    if not meshes:
+        return
     for mesh in meshes:
+        if not mesh.geometry.polygons:
+            continue
         for poly in mesh.geometry.polygons:
             if poly.materialTag != geo_ptag:
                 continue
             mesh.select(replace=True)
             lx.eval('select.type polygon')
             poly.select(replace=True)
-            color_str = get_color_str(geo_ptag)
+            if not specific_color_str:
+                color_str = get_color_str(geo_ptag)
+            else:
+                color_str = specific_color_str
             lx.eval('poly.setMaterial "{}" {{{}}} {} {}'.format(geo_ptag, color_str, '0.8', '0.04'))
             # assign material for one polygon only, there is no need for do it for all polygons
             return
@@ -78,13 +86,18 @@ def assign_new_material(geo_ptag):
 def assign_materials_to_unassigned_ptags(meshes, masks):
     masks_ptags = get_mask_ptags(masks)
     geometry_ptags = get_geometry_ptags(meshes)
+    use_specific_color = bool(get_user_value(h3dc.USER_VAL_NAME_USE_SPECIFIC_COLOR))
+    if use_specific_color:
+        specific_color = get_user_value(h3dc.USER_VAL_NAME_SPECIFIC_COLOR)
+    else:
+        specific_color = None
 
     for geo_ptag in geometry_ptags:
         if geo_ptag in masks_ptags:
             continue
-        assign_new_material(geo_ptag)
+        assign_new_material(geo_ptag, specific_color_str=specific_color)
         masks_ptags.add(geo_ptag)
 
 
-log_name = replace_file_ext(modo.scene.current().name)
+log_name = replace_file_ext(modo.Scene().name)
 h3dd = H3dDebug(enable=False, file=log_name)
