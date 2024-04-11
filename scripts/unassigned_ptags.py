@@ -11,9 +11,8 @@ import modo
 import lx
 from random import random
 
-from h3d_utilites.scripts.h3d_utils import is_material_ptyp, replace_file_ext, get_user_value
+from h3d_utilites.scripts.h3d_utils import is_material_ptyp, replace_file_ext
 from h3d_utilites.scripts.h3d_debug import H3dDebug
-import h3d_cad2modo.scripts.h3d_kit_constants as h3dc
 
 
 def get_mask_ptags(masks):
@@ -83,12 +82,13 @@ def assign_new_material(geo_ptag, specific_color_str=None):
             return
 
 
-def assign_materials_to_unassigned_ptags(meshes, masks):
+def assign_materials_to_unassigned_ptags(meshes, masks, use_color=False, color=None):
     masks_ptags = get_mask_ptags(masks)
     geometry_ptags = get_geometry_ptags(meshes)
-    use_specific_color = bool(get_user_value(h3dc.USER_VAL_NAME_USE_SPECIFIC_COLOR))
+    use_specific_color = use_color
     if use_specific_color:
-        specific_color = get_user_value(h3dc.USER_VAL_NAME_SPECIFIC_COLOR)
+        # specific_color = get_user_value(h3dc.USER_VAL_NAME_SPECIFIC_COLOR)
+        specific_color = color
     else:
         specific_color = None
 
