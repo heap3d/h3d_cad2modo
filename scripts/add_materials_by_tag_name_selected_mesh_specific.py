@@ -17,7 +17,7 @@ from h3d_cad2modo.scripts.unassigned_ptags import assign_materials_to_unassigned
 
 
 def main():
-    print('add_materials_by_tag_name_selected_mesh.py start...')
+    print('add_materials_by_tag_name_selected_mesh_specific.py start...')
 
     meshes = modo.Scene().selectedByType(itype=c.MESH_TYPE)
     masks = modo.Scene().items(itype=c.MASK_TYPE)
