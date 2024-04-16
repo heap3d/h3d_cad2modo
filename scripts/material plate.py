@@ -15,7 +15,6 @@ import lx
 
 
 def main():
-    scene = modo.Scene()
     # get materials from shader tree
     shader_tree_materials = []
     for material_mask in scene.items("mask"):
@@ -60,6 +59,7 @@ if __name__ == '__main__':
     print()
     print("material plate.py start...")
 
+    scene = modo.Scene()
     main()
 
     print("material plate.py finished!")

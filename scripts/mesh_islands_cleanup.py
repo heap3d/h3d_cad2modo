@@ -79,7 +79,7 @@ def main():
     opt.remove_disco_weight_values = get_user_value(REMOVE_DISCO_WEIGHT_VALUES)
 
     # get selected meshes
-    selected_meshes = modo.Scene().selectedByType(itype=c.MESH_TYPE)
+    selected_meshes = scene.selectedByType(itype=c.MESH_TYPE)
     # cleanup selected meshes in a loop
     for mesh in selected_meshes:
         # group selected mesh in a temp folder
@@ -88,7 +88,7 @@ def main():
         root_index = mesh.rootIndex
         parent_index = mesh.parentIndex
         mesh_index = root_index if root_index is not None else parent_index
-        group_loc = modo.Scene().addItem(itype=c.GROUPLOCATOR_TYPE)
+        group_loc = scene.addItem(itype=c.GROUPLOCATOR_TYPE)
         group_loc.setParent(mesh.parent)
         mesh.setParent(group_loc)
         # unmerge mesh into a temp folder
@@ -106,12 +106,13 @@ def main():
         parent_id = parent_item.id if parent_item else None
         lx.eval("item.parent {} {} {} inPlace:1 duplicate:0".format(mesh.id, parent_id, mesh_index + 1))
         # remove a temp folder
-        modo.Scene().removeItems(group_loc)
+        scene.removeItems(group_loc)
 
     print("mesh_islands_cleanup.py done.")
 
 
-log_name = replace_file_ext(modo.scene.current().name)
+scene = modo.Scene()
+log_name = replace_file_ext(scene.current().name)
 h3dd = H3dDebug(enable=False, file=log_name)
 
 if __name__ == "__main__":

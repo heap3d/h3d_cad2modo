@@ -36,7 +36,7 @@ def set_page_start(start, tags):
 
 def read_args():
     mode = h3dc.RM_SCAN
-    arg_command = lx.args()[0]
+    arg_command = lx.args()[0]  # type:ignore
     if arg_command == "-prev":
         mode = h3dc.RM_PREV
     elif arg_command == "-next":
@@ -61,7 +61,7 @@ def get_tags_list(mode):
     tags = list()
     if mode == h3dc.RM_SCAN:
         # get material tag from mesh polygons
-        for mesh in modo.scene.current().items(itype=c.MESH_TYPE):
+        for mesh in scene.items(itype=c.MESH_TYPE):
             for polygon in mesh.geometry.polygons:
                 try:
                     tag = polygon.materialTag
@@ -113,15 +113,15 @@ def get_tags_list(mode):
 def get_materials_list(mode, tags):
     materials_set = set()
     if mode == h3dc.RM_SCAN:
-        for mask in modo.scene.current().items(itype="mask"):
+        for mask in scene.items(itype="mask"):
             if mask.channel("ptyp") is None:
                 continue
-            if mask.channel("ptyp").get() != "Material":
+            if mask.channel("ptyp").get() != "Material":  # type:ignore
                 continue
-            if mask.channel("ptag").get() == "":
+            if mask.channel("ptag").get() == "":  # type:ignore
                 continue
             # add polygon tag name string to list
-            material_str = "{}".format(mask.channel("ptag").get())
+            material_str = "{}".format(mask.channel("ptag").get())  # type:ignore
             materials_set.add(get_safe_material_str(name=material_str))
         # add tags to the materials
         materials_set.update(tags)
@@ -212,7 +212,7 @@ def update_table(tags, start):
 
     for index in range(start, finish):
         material_ui_id = get_material_ui(ui_line=index - start + 1)
-        tags_materials_map[index] = int(material_ui_id)
+        tags_materials_map[index] = int(material_ui_id)  # type:ignore
 
     tags_materials_map_store_string = ";".join(
         ["{}".format(x) for x in tags_materials_map]
@@ -347,7 +347,7 @@ def int_to_float_color(int_color):
 
 
 def get_sel_color_index(tags):
-    selected = modo.scene.current().selectedByType("mask")
+    selected = scene.selectedByType("mask")
     selected_colors = list()
     for mask in selected:
         if not mask.name.startswith(h3dc.COLOR_NAME_PREFIX):
@@ -464,7 +464,7 @@ def save_map(tags, materials, tags_materials_map):
     if not len(map_lines):
         print("No data to save")
         sys.exit()
-    scene_name = modo.scene.current().name.split(".")[0].strip()
+    scene_name = scene.name.split(".")[0].strip()
     if not scene_name or scene_name == "":
         scene_name = "RGB - Materials"
     # get directory and file name (file save as dialog box)
@@ -480,7 +480,7 @@ def save_map(tags, materials, tags_materials_map):
     if full_filename is None:
         sys.exit()
     # save decoded tags_materials_map to file
-    with open(full_filename, "w") as file:
+    with open(full_filename, "w") as file:  # type:ignore
         file.writelines(map_lines)
 
 
@@ -545,12 +545,11 @@ def get_default_load_map_filename():
         return config_default_filename
     kits_path = lx.eval("query platformservice path.path ? kits")
     default_filename = os.path.join(
-        kits_path, h3dc.KIT_NAME, h3dc.KIT_SCRIPTS_NAME, h3dc.MAP_DEFAULT_FILENAME
-    )
+        kits_path, h3dc.KIT_NAME, h3dc.KIT_SCRIPTS_NAME, h3dc.MAP_DEFAULT_FILENAME)  # type:ignore
     if os.path.exists(default_filename):
         print("default map table path:<{}>".format(default_filename))
         return default_filename
-    lux_kits_path = kits_path.replace("\\Kits", "\\Luxology\\Kits")
+    lux_kits_path = kits_path.replace("\\Kits", "\\Luxology\\Kits")  # type:ignore
     default_filename = os.path.join(
         lux_kits_path, h3dc.KIT_NAME, h3dc.KIT_SCRIPTS_NAME, h3dc.MAP_DEFAULT_FILENAME
     )
@@ -576,8 +575,8 @@ def apply_command(tags, materials, tags_materials_map):
         selection_sets[tags[source_id]] = materials[target_id]
         lx.eval("select.drop polygon")
     # select all mesh items
-    modo.scene.current().deselect()
-    meshes = modo.scene.current().items(itype=c.MESH_TYPE)
+    scene.deselect()
+    meshes = scene.items(itype=c.MESH_TYPE)
     for mesh in meshes:
         mesh.select(replace=False)
     lx.eval("select.type polygon")
@@ -596,38 +595,38 @@ def apply_command(tags, materials, tags_materials_map):
 
     lx.eval("select.drop polygon")
     lx.eval("select.type item")
-    modo.scene.current().deselect()
+    scene.deselect()
 
 
 def get_float_color_str_from_mask(tag_name):
     # h3dd.print_debug("get_float_color_str_from_mask('{}')".format(tag_name))
     color_str = h3dc.MISSING_COLOR
-    for mask in modo.scene.current().items(itype=c.MASK_TYPE):
+    for mask in scene.items(itype=c.MASK_TYPE):
         if mask.channel("ptyp") is None:
             # h3dd.print_debug("ptyp is None", 1)
             continue
         if (
-            mask.channel("ptyp").get() != "Material"
-            and mask.channel("ptyp").get() != ""
+            mask.channel("ptyp").get() != "Material"  # type:ignore
+            and mask.channel("ptyp").get() != ""  # type:ignore
         ):
             # h3dd.print_debug("ptyp <{}> != Material".format(mask.channel('ptyp').get()), 1)
             continue
-        if mask.channel("ptag").get() == "":
+        if mask.channel("ptag").get() == "":  # type:ignore
             # h3dd.print_debug("ptag == ''", 1)
             continue
         # filter out mismatched masks
-        if mask.channel("ptag").get() != tag_name:
+        if mask.channel("ptag").get() != tag_name:  # type:ignore
             # h3dd.print_debug("ptag <{}> != tag_name <{}>".format(mask.channel('ptag').get(), tag_name), 1)
             continue
         # find advancedMaterial in mask children
         h3dd.print_debug(
-            "ptag <{}> == tag_name <{}>".format(mask.channel("ptag").get(), tag_name), 1
+            "ptag <{}> == tag_name <{}>".format(mask.channel("ptag").get(), tag_name), 1  # type:ignore
         )
         for child in mask.children():
             if child.type == "advancedMaterial":
                 adv_mat = child
                 # get diffuse color
-                color_str = " ".join(str(x) for x in adv_mat.channel("diffCol").get())
+                color_str = " ".join(str(x) for x in adv_mat.channel("diffCol").get())  # type:ignore
                 # h3dd.print_debug("advancedMaterial: color_str <{}>".format(color_str))
                 return color_str
 
@@ -637,13 +636,13 @@ def get_float_color_str_from_mask(tag_name):
 
 def select_polygons_by_tag(select_material_tag):
     is_mask_selected = False
-    for mask in modo.scene.current().items(itype=c.MASK_TYPE):
+    for mask in scene.items(itype=c.MASK_TYPE):
         if mask.channel("ptyp") is None:
             continue
-        if not is_material_ptyp(mask.channel("ptyp").get()):
+        if not is_material_ptyp(mask.channel("ptyp").get()):  # type:ignore
             continue
         if (
-            mask.channel("ptag").get().replace(h3dc.MATERIAL_SUFFIX, "")
+            mask.channel("ptag").get().replace(h3dc.MATERIAL_SUFFIX, "")  # type:ignore
             == select_material_tag
         ):
             mask.select(replace=True)
@@ -654,7 +653,7 @@ def select_polygons_by_tag(select_material_tag):
         lx.eval("material.selectPolygons")
         return
     # add tmp mesh
-    tmp_mesh = modo.Scene().addMesh()
+    tmp_mesh = scene.addMesh()
     tmp_mesh.select(replace=True)
     # add unit cube into current mesh item
     lx.eval('script.run "macro.scriptservice:32235710027:macro"')
@@ -664,9 +663,9 @@ def select_polygons_by_tag(select_material_tag):
             select_material_tag
         )
     )
-    seaching_mask = modo.Scene().selectedByType(itype=c.MASK_TYPE)[0]
+    seaching_mask = scene.selectedByType(itype=c.MASK_TYPE)[0]
     # delete tmp mesh
-    modo.Scene().removeItems(tmp_mesh)
+    scene.removeItems(tmp_mesh)
     # select searching material
     seaching_mask.select(replace=True)
     # select polygons by material
@@ -679,7 +678,7 @@ def is_visible(item):
 
 
 def deselect_hidden():
-    for mesh in modo.Scene().selectedByType(itype=c.MESH_TYPE):
+    for mesh in scene.selectedByType(itype=c.MESH_TYPE):
         h3dd.print_debug(
             "mesh: <{}> visible: <{}>, visible channel: <{}>".format(
                 mesh.name, is_visible(mesh), mesh.channel("visible").get()
@@ -705,7 +704,7 @@ def main():
     print("")
     print("remap_table_UI.py start...")
 
-    scene_filename = modo.scene.current().filename
+    scene_filename = scene.filename
     if scene_filename is None:
         print("No active scene found, try open a scene first")
         sys.exit()
@@ -811,7 +810,7 @@ def main():
         )
 
     if run_mode == h3dc.RM_SELECT:
-        arg_mode, line_id_str = lx.args()
+        arg_mode, line_id_str = lx.args()  # type:ignore
         line_id = int(line_id_str)
         tag_id = int(line_id) + get_page_start() - 1
         select_polygons_by_tag(global_tags[tag_id])
@@ -822,7 +821,8 @@ def main():
 
 if __name__ == "__main__":
     PAGE_SIZE = 0
+    scene = modo.Scene()
     h3dd = H3dDebug(
-        enable=False, file=replace_file_ext(modo.Scene().filename, ".log")
+        enable=False, file=replace_file_ext(scene.filename, ".log")
     )
     main()

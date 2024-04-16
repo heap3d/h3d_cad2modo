@@ -27,11 +27,11 @@ def save_solo_mesh_as_mesh_assembly_preset(mesh):
     if len(mesh.geometry.vertices) == 0:
         print('the mesh is empty')
         return
-    modo.scene.current().deselect()
+    scene.deselect()
     mesh.select()
     lx.eval('preset.createAssembly subtype:mesh')
     # get assembly group
-    group_selected = modo.scene.current().selectedByType(itype=c.GROUP_TYPE)
+    group_selected = scene.selectedByType(itype=c.GROUP_TYPE)
     print('assembly groups: <{}>'.format(group_selected))
     for group in group_selected:
         lx.eval('assembly.presetSave {} mesh "{}/{}.lxl" thumb:""'.format(group.id, REFLIB_DIR, mesh.name))
@@ -42,14 +42,14 @@ def save_multi_items_as_mesh_assembly_preset(item):
     # return if no children
     if not item.children():
         return
-    modo.scene.current().deselect()
+    scene.deselect()
     item.select()
     # select all children
     for child in item.children(recursive=True):
         child.select()
     lx.eval('preset.createAssembly subtype:mesh')
     # get assembly group
-    group_selected = modo.scene.current().selectedByType(itype=c.GROUP_TYPE)
+    group_selected = scene.selectedByType(itype=c.GROUP_TYPE)
     for group in group_selected:
         lx.eval('assembly.presetSave {} mesh "{}/{}.lxl" thumb:""'.format(group.id, REFLIB_DIR, item.name))
 
@@ -66,7 +66,7 @@ def main():
         )
         return
 
-    selected = modo.scene.current().selected
+    selected = scene.selected
     # get items with no parent
     root_items = [item for item in selected if not item.parent]
     print('root items list: {}'.format([i.name for i in root_items]))
@@ -83,4 +83,5 @@ def main():
 REFLIB_DIR = get_user_value(h3dc.USER_VAL_REFLIB_DIR_NAME)
 
 if __name__ == '__main__':
+    scene = modo.Scene()
     main()

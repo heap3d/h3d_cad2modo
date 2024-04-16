@@ -14,7 +14,7 @@ import lx
 
 def is_mask_valid(mask):
     # get scene render item
-    render_item = modo.scene.current().renderItem
+    render_item = scene.renderItem
     # return false if mask parent is not render item
     if mask.parent.id != render_item.id:
         return False
@@ -72,8 +72,8 @@ def main():
     print('')
     print('split_mesh_by_material.py start...')
 
-    material_masks = [mask for mask in modo.scene.current().items(itype=c.MASK_TYPE) if is_mask_valid(mask)]
-    initial_meshes = modo.scene.current().selectedByType(itype=c.MESH_TYPE)
+    material_masks = [mask for mask in scene.items(itype=c.MASK_TYPE) if is_mask_valid(mask)]
+    initial_meshes = scene.selectedByType(itype=c.MESH_TYPE)
 
     for mask in material_masks:
         # deselect all polygons
@@ -81,7 +81,7 @@ def main():
         lx.eval('select.drop polygon')
         # deselect all items
         lx.eval('select.type item')
-        modo.scene.current().deselect()
+        scene.deselect()
         # select polygons by material
         mask.select()
         lx.eval('material.selectPolygons')
@@ -94,7 +94,7 @@ def main():
                 continue
             lx.eval('select.cut')
             if mesh_is_not_empty(mesh):
-                new_mesh = modo.scene.current().addMesh(name=mesh.baseName)
+                new_mesh = scene.addMesh(name=mesh.baseName)
                 new_mesh.select(replace=True)
             lx.eval('select.paste')
             remove_polys_selset_by_mask(mask)
@@ -103,4 +103,5 @@ def main():
 
 
 if __name__ == '__main__':
+    scene = modo.Scene()
     main()

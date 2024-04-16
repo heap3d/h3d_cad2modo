@@ -100,11 +100,11 @@ def get_masks_with_item_tag(masks):
 
 
 def get_scene_masks():
-    return modo.Scene().items(itype=c.MASK_TYPE)
+    return scene.items(itype=c.MASK_TYPE)
 
 
 def get_selected_masks():
-    return modo.Scene().selectedByType(itype=c.MASK_TYPE)
+    return scene.selectedByType(itype=c.MASK_TYPE)
 
 
 def is_simple_mask(mask):
@@ -190,11 +190,11 @@ def get_ptags(masks):
 
 def assign_new_materials(rgb_color_strings, duplicated_ptags):
     # select all mesh items and enter polygon mode to using selection sets
-    modo.Scene().deselect()
+    scene.deselect()
     # enter item mode
     lx.eval('select.type item')
     # select all meshes
-    for item in modo.Scene().items(itype=c.MESH_TYPE):
+    for item in scene.items(itype=c.MESH_TYPE):
         item.select()
     # enter polygon mode
     lx.eval('select.type polygon')
@@ -248,7 +248,7 @@ def main():
     print('')
     print('cad_materials_collect.py start...')
 
-    for mesh in modo.Scene().meshes:
+    for mesh in scene.meshes:
         set_polygon_part(mesh)
 
     initial_masks = get_scene_masks()
@@ -281,7 +281,7 @@ def main():
     # create list of material mask items to remove
     remove_list = set()
     remove_list.update(validated_simple_masks)
-    item_masks = get_masks_with_item_tag(modo.Scene().items(itype=c.MASK_TYPE))
+    item_masks = get_masks_with_item_tag(scene.items(itype=c.MASK_TYPE))
 
     # add item masks to remove_list if no used materials in there
     for item_mask in item_masks:
@@ -294,8 +294,8 @@ def main():
         remove_if_exist(item, children=True)
 
     # assign new materials wich are not assigned yet
-    meshes = set(modo.Scene().meshes)
-    masks = set(modo.Scene().items(itype=c.MASK_TYPE))
+    meshes = set(scene.meshes)
+    masks = set(scene.items(itype=c.MASK_TYPE))
     assign_materials_to_unassigned_ptags(meshes, masks)
 
     lx.eval('select.type item')
@@ -303,7 +303,8 @@ def main():
     print('cad_materials_collect.py done.')
 
 
-log_name = replace_file_ext(modo.Scene().name)
+scene = modo.Scene()
+log_name = replace_file_ext(scene.name)
 h3dd = H3dDebug(enable=False, file=log_name)
 
 if __name__ == '__main__':

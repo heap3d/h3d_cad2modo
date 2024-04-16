@@ -18,11 +18,11 @@ import h3d_cad2modo.scripts.h3d_kit_constants as h3dc
 
 def get_materials(selected):
     if selected:
-        return [i for i in modo.Scene().selectedByType(itype=c.MASK_TYPE)
+        return [i for i in scene.selectedByType(itype=c.MASK_TYPE)
                 if i.parent.type == itype_str(c.POLYRENDER_TYPE)]
     else:
-        return [i for i in modo.Scene().items(itype=c.MASK_TYPE)
-                if i.parent.type == itype_str(c.POLYRENDER_TYPE)]
+        return [i for i in scene.items(itype=c.MASK_TYPE)
+                if i.parent.type == itype_str(c.POLYRENDER_TYPE)]  # type:ignore
 
 
 def rename_material(mask):
@@ -41,11 +41,11 @@ def rename_material(mask):
 def main():
     print('prepare_material_tags.py start...')
 
-    SELECTED_MODE = 'selected' in lx.args()
+    SELECTED_MODE = 'selected' in lx.args()  # type:ignore
 
     materials = get_materials(SELECTED_MODE)
 
-    meshes = modo.scene.current().meshes
+    meshes = scene.meshes
     for mesh in meshes:
         mesh.select()
 
@@ -56,4 +56,5 @@ def main():
 
 
 if __name__ == '__main__':
+    scene = modo.Scene()
     main()

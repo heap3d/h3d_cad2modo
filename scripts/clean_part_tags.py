@@ -18,9 +18,9 @@ def main():
     print('')
     print('clean_part_tags.py start...')
 
-    meshes = modo.Scene().meshes
-    if 'selected' in lx.args():
-        meshes = modo.Scene().selectedByType(itype=c.MESH_TYPE)
+    meshes = scene.meshes
+    if 'selected' in lx.args():  # type:ignore
+        meshes = scene.selectedByType(itype=c.MESH_TYPE)
 
     if not meshes:
         return
@@ -32,4 +32,5 @@ def main():
 
 
 if __name__ == '__main__':
+    scene = modo.Scene()
     main()
