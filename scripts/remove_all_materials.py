@@ -43,7 +43,8 @@ def main():
     print(f"Unknow command(s): {' '.join(args)}")
 
 
-log_name = replace_file_ext(modo.Scene().name)
+scene = modo.Scene()
+log_name = replace_file_ext(scene.name)
 h3dd = H3dDebug(enable=False, file=log_name)
 
 if __name__ == "__main__":
