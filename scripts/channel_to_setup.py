@@ -52,7 +52,7 @@ def get_scale(locator):
 
 
 def main():
-    items = scene.current().items(itype='locator', superType=True)
+    items = scene.items(itype='locator', superType=True)
     for item in items:
         # print(item.name, item)
         # if item.type == 'replicator':

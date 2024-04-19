@@ -16,7 +16,7 @@ import modo.constants as c
 def main():
     print('start...')
 
-    items = scene.current().items(itype=c.LOCATOR_TYPE, superType=True)
+    items = scene.items(itype=c.LOCATOR_TYPE, superType=True)
     for item in items:
         parent = item.parent
         if parent:
