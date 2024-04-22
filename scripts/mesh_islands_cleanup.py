@@ -28,6 +28,7 @@ MERGE_DISCO_VALUES = "h3d_imc_merge_disco_values"
 UNIFY_POLYGONS = "h3d_imc_unify_polygons"
 FORCE_UNIFY = "h3d_imc_force_unify"
 REMOVE_DISCO_WEIGHT_VALUES = "h3d_imc_remove_disco_weight_values"
+FIX_GAPS = "h3d_imc_fix_gaps"
 
 
 class Options:
@@ -42,26 +43,43 @@ class Options:
     unify_polygons = False
     force_unify = False
     remove_disco_weight_values = False
+    fix_gaps = False
 
 
 def mesh_cleanup(opt):
     lx.eval("!mesh.cleanup {} {} {} {} {} {} {} {} {} {} {}".format(
-            opt.remove_floating_vertices,
-            opt.remove_one_point_polygons,
-            opt.remove_two_points_polygons,
-            opt.fix_duplicate_points_in_polygon,
-            opt.remove_colinear_vertices,
-            opt.fix_face_normal_vectors,
-            opt.merge_vertices,
-            opt.merge_disco_values,
-            opt.unify_polygons,
-            opt.force_unify,
-            opt.remove_disco_weight_values
+            f'floatingVertex:{opt.remove_floating_vertices}',
+            f'onePointPolygon:{opt.remove_one_point_polygons}',
+            f'twoPointPolygon:{opt.remove_two_points_polygons}',
+            f'dupPointPolygon:{opt.fix_duplicate_points_in_polygon}',
+            f'colinear:{opt.remove_colinear_vertices}',
+            f'faceNormal:{opt.fix_face_normal_vectors}',
+            f'mergeVertex:{opt.merge_vertices}',
+            f'mergeDisco:{opt.merge_disco_values}',
+            f'unifyPolygon:{opt.unify_polygons}',
+            f'forceUnify:{opt.force_unify}',
+            f'removeDiscoWeight:{opt.remove_disco_weight_values}'
+            ))
+
+
+def mesh_cleanup_17(opt):
+    lx.eval("!mesh.cleanup {} {} {} {} {} {} {} {} {} {} {} {}".format(
+            f'floatingVertex:{opt.remove_floating_vertices}',
+            f'onePointPolygon:{opt.remove_one_point_polygons}',
+            f'twoPointPolygon:{opt.remove_two_points_polygons}',
+            f'dupPointPolygon:{opt.fix_duplicate_points_in_polygon}',
+            f'colinear:{opt.remove_colinear_vertices}',
+            f'faceNormal:{opt.fix_face_normal_vectors}',
+            f'mergeVertex:{opt.merge_vertices}',
+            f'mergeDisco:{opt.merge_disco_values}',
+            f'unifyPolygon:{opt.unify_polygons}',
+            f'forceUnify:{opt.force_unify}',
+            f'removeDiscoWeight:{opt.remove_disco_weight_values}',
+            f'fixGaps:{opt.fix_gaps}'
             ))
 
 
 def main():
-    # mesh.cleanup true true true true true true true true true true true
     print("")
     print("start mesh_islands_cleanup.py ...")
 
@@ -77,6 +95,7 @@ def main():
     opt.unify_polygons = get_user_value(UNIFY_POLYGONS)
     opt.force_unify = get_user_value(FORCE_UNIFY)
     opt.remove_disco_weight_values = get_user_value(REMOVE_DISCO_WEIGHT_VALUES)
+    opt.fix_gaps = get_user_value(FIX_GAPS)
 
     # get selected meshes
     selected_meshes = scene.selectedByType(itype=c.MESH_TYPE)
@@ -98,7 +117,10 @@ def main():
         for child in group_loc.children():
             child.select()
         # cleanup selected meshes
-        mesh_cleanup(opt)
+        if lx.service.Platform().AppVersion() < 1700:  # type: ignore
+            mesh_cleanup(opt)
+        else:
+            mesh_cleanup_17(opt)
         # merge selected meshes
         lx.eval("layer.mergeMeshes true")
         # parent mesh to an previous parent
@@ -107,6 +129,14 @@ def main():
         lx.eval("item.parent {} {} {} inPlace:1 duplicate:0".format(mesh.id, parent_id, mesh_index + 1))
         # remove a temp folder
         scene.removeItems(group_loc)
+
+    # restore selection
+    scene.deselect()
+    for item in selected_meshes:
+        item.select()
+
+    # run one more Mesh Cleanup command with statistics
+    lx.eval('mesh.cleanup true')
 
     print("mesh_islands_cleanup.py done.")
 
