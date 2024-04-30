@@ -29,6 +29,7 @@ UNIFY_POLYGONS = "h3d_imc_unify_polygons"
 FORCE_UNIFY = "h3d_imc_force_unify"
 REMOVE_DISCO_WEIGHT_VALUES = "h3d_imc_remove_disco_weight_values"
 FIX_GAPS = "h3d_imc_fix_gaps"
+NOFINAL = 'nofinal'
 
 
 class Options:
@@ -44,6 +45,7 @@ class Options:
     force_unify = False
     remove_disco_weight_values = False
     fix_gaps = False
+    final_mesh_cleanup = True
 
 
 def mesh_cleanup(opt):
@@ -97,6 +99,11 @@ def main():
     opt.remove_disco_weight_values = get_user_value(REMOVE_DISCO_WEIGHT_VALUES)
     opt.fix_gaps = get_user_value(FIX_GAPS)
 
+    args = lx.args()
+    if args:
+        if args[0] == 'nofinal':
+            opt.final_mesh_cleanup = False
+
     # get selected meshes
     selected_meshes = scene.selectedByType(itype=c.MESH_TYPE)
     # cleanup selected meshes in a loop
@@ -136,7 +143,8 @@ def main():
         item.select()
 
     # run one more Mesh Cleanup command with statistics
-    lx.eval('mesh.cleanup true')
+    if opt.final_mesh_cleanup:
+        lx.eval('mesh.cleanup true')
 
     print("mesh_islands_cleanup.py done.")
 
