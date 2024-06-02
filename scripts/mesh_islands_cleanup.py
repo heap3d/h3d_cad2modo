@@ -28,6 +28,7 @@ MERGE_DISCO_VALUES = "h3d_imc_merge_disco_values"
 UNIFY_POLYGONS = "h3d_imc_unify_polygons"
 FORCE_UNIFY = "h3d_imc_force_unify"
 REMOVE_DISCO_WEIGHT_VALUES = "h3d_imc_remove_disco_weight_values"
+LAST_STEP_MERGE_VERTICES = "h3d_imc_merge_vertices_last_step"
 FIX_GAPS = "h3d_imc_fix_gaps"
 NOFINAL = 'nofinal'
 
@@ -45,18 +46,33 @@ class Options:
     force_unify = False
     remove_disco_weight_values = False
     fix_gaps = False
+    last_step_merge_vertices = False
     final_mesh_cleanup = True
 
 
-def mesh_cleanup(opt):
-    lx.eval("!mesh.cleanup {} {} {} {} {} {} {} {} {} {} {}".format(
+def mesh_cleanup_versions(opt: Options, last_step: bool = False) -> None:
+    if lx.service.Platform().AppVersion() < 1700:  # type: ignore
+        mesh_cleanup(opt, last_step)
+    else:
+        mesh_cleanup_17(opt, last_step)
+
+
+def mesh_cleanup(opt: Options, last_step: bool = False) -> None:
+    if last_step:
+        silence = ''
+        context_merge_vertices = opt.last_step_merge_vertices
+    else:
+        silence = '!'
+        context_merge_vertices = opt.merge_vertices
+    lx.eval("{}mesh.cleanup {} {} {} {} {} {} {} {} {} {} {}".format(
+            silence,
             f'floatingVertex:{opt.remove_floating_vertices}',
             f'onePointPolygon:{opt.remove_one_point_polygons}',
             f'twoPointPolygon:{opt.remove_two_points_polygons}',
             f'dupPointPolygon:{opt.fix_duplicate_points_in_polygon}',
             f'colinear:{opt.remove_colinear_vertices}',
             f'faceNormal:{opt.fix_face_normal_vectors}',
-            f'mergeVertex:{opt.merge_vertices}',
+            f'mergeVertex:{context_merge_vertices}',
             f'mergeDisco:{opt.merge_disco_values}',
             f'unifyPolygon:{opt.unify_polygons}',
             f'forceUnify:{opt.force_unify}',
@@ -64,15 +80,22 @@ def mesh_cleanup(opt):
             ))
 
 
-def mesh_cleanup_17(opt):
-    lx.eval("!mesh.cleanup {} {} {} {} {} {} {} {} {} {} {} {}".format(
+def mesh_cleanup_17(opt: Options, last_step: bool = False) -> None:
+    if last_step:
+        silence = ''
+        context_merge_vertices = opt.last_step_merge_vertices
+    else:
+        silence = '!'
+        context_merge_vertices = opt.merge_vertices
+    lx.eval("{}mesh.cleanup {} {} {} {} {} {} {} {} {} {} {} {}".format(
+            silence,
             f'floatingVertex:{opt.remove_floating_vertices}',
             f'onePointPolygon:{opt.remove_one_point_polygons}',
             f'twoPointPolygon:{opt.remove_two_points_polygons}',
             f'dupPointPolygon:{opt.fix_duplicate_points_in_polygon}',
             f'colinear:{opt.remove_colinear_vertices}',
             f'faceNormal:{opt.fix_face_normal_vectors}',
-            f'mergeVertex:{opt.merge_vertices}',
+            f'mergeVertex:{context_merge_vertices}',
             f'mergeDisco:{opt.merge_disco_values}',
             f'unifyPolygon:{opt.unify_polygons}',
             f'forceUnify:{opt.force_unify}',
@@ -98,6 +121,7 @@ def main():
     opt.force_unify = get_user_value(FORCE_UNIFY)
     opt.remove_disco_weight_values = get_user_value(REMOVE_DISCO_WEIGHT_VALUES)
     opt.fix_gaps = get_user_value(FIX_GAPS)
+    opt.last_step_merge_vertices = get_user_value(LAST_STEP_MERGE_VERTICES)
 
     args = lx.args()
     if args:
@@ -105,7 +129,7 @@ def main():
             opt.final_mesh_cleanup = False
 
     # get selected meshes
-    selected_meshes = scene.selectedByType(itype=c.MESH_TYPE)
+    selected_meshes: list[modo.Item] = scene.selectedByType(itype=c.MESH_TYPE)
     # cleanup selected meshes in a loop
     for mesh in selected_meshes:
         # group selected mesh in a temp folder
@@ -114,6 +138,8 @@ def main():
         root_index = mesh.rootIndex
         parent_index = mesh.parentIndex
         mesh_index = root_index if root_index is not None else parent_index
+        if not mesh_index:
+            mesh_index = 0
         group_loc = scene.addItem(itype=c.GROUPLOCATOR_TYPE)
         group_loc.setParent(mesh.parent)
         mesh.setParent(group_loc)
@@ -124,10 +150,7 @@ def main():
         for child in group_loc.children():
             child.select()
         # cleanup selected meshes
-        if lx.service.Platform().AppVersion() < 1700:  # type: ignore
-            mesh_cleanup(opt)
-        else:
-            mesh_cleanup_17(opt)
+        mesh_cleanup_versions(opt)
         # merge selected meshes
         lx.eval("layer.mergeMeshes true")
         # parent mesh to an previous parent
@@ -144,7 +167,7 @@ def main():
 
     # run one more Mesh Cleanup command with statistics
     if opt.final_mesh_cleanup:
-        lx.eval('mesh.cleanup true')
+        mesh_cleanup_versions(opt, last_step=True)
 
     print("mesh_islands_cleanup.py done.")
 
