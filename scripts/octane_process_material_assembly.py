@@ -18,6 +18,7 @@ import os.path
 from h3d_utilites.scripts.h3d_utils import get_user_value
 
 import h3d_cad2modo.scripts.h3d_kit_constants as h3dc
+from h3d_utilites.scripts.h3d_debug import H3dDebug
 
 
 def is_empty_assembly(item):
@@ -41,7 +42,7 @@ def clear_group(item):
         for child in item.itemGraph('parent').reverse():
             clear_group(child)
     # remove empty assembly
-    scene.removeItems(item)
+    modo.Scene().removeItems(item)
 
 
 def process_assemblies(assemblies, opt):
@@ -56,10 +57,10 @@ def process_octane_overrides(opt):
     if not opt.OCTMAT_SETUP:
         return
     # get octane override material list
-    octane_overrides = scene.items(itype='material.octaneRenderer')
+    octane_overrides = modo.Scene().items(itype='material.octaneRenderer')
     for octane_override in octane_overrides:
         # edit in schematic for each octane override material
-        scene.deselect()
+        modo.Scene().deselect()
         lx.eval('!!select.subItem {} set'.format(octane_override.id))
         lx.eval('!!octane.materialMacro schematicEdit')
 
@@ -68,17 +69,17 @@ def process_render_settings(opt):
     if not opt.REND_SETUP:
         return
     # render settings setup
-    scene.renderItem.channel('resX').set(h3dc.RENDER_RESOLUTION)  # type:ignore
-    scene.renderItem.channel('resY').set(h3dc.RENDER_RESOLUTION)  # type:ignore
-    scene.renderItem.channel('aa').set(h3dc.RENDER_AA)  # type:ignore
-    scene.renderItem.channel('reflSmps').set(h3dc.RENDER_SAMPLES)  # type:ignore
-    scene.renderItem.channel('coarseRate').set(h3dc.RENDER_SHADER_RATE)  # type:ignore
+    modo.Scene().renderItem.channel('resX').set(h3dc.RENDER_RESOLUTION)  # type:ignore
+    modo.Scene().renderItem.channel('resY').set(h3dc.RENDER_RESOLUTION)  # type:ignore
+    modo.Scene().renderItem.channel('aa').set(h3dc.RENDER_AA)  # type:ignore
+    modo.Scene().renderItem.channel('reflSmps').set(h3dc.RENDER_SAMPLES)  # type:ignore
+    modo.Scene().renderItem.channel('coarseRate').set(h3dc.RENDER_SHADER_RATE)  # type:ignore
     # turn environment important sampling on
-    scene.renderItem.channel('envSample').set(1)  # type:ignore
+    modo.Scene().renderItem.channel('envSample').set(1)  # type:ignore
     # turn irradiance caching off
-    scene.renderItem.channel('irrCache').set(0)  # type:ignore
-    scene.renderItem.channel('envRays').set(h3dc.RENDER_SAMPLES)  # type:ignore
-    shaders = scene.items(itype='defaultShader')
+    modo.Scene().renderItem.channel('irrCache').set(0)  # type:ignore
+    modo.Scene().renderItem.channel('envRays').set(h3dc.RENDER_SAMPLES)  # type:ignore
+    shaders = modo.Scene().items(itype='defaultShader')
     for shader in shaders:
         shader.channel('shadeRate').set(h3dc.RENDER_SHADER_RATE)  # type:ignore
 
@@ -89,7 +90,7 @@ def process_lights(opt):
     if not opt.LIGHT_SETUP:
         return
     # turn all lights off
-    for light in scene.items(itype=c.LIGHT_TYPE):
+    for light in modo.Scene().items(itype=c.LIGHT_TYPE):
         light.channel('visible').set('allOff')  # type:ignore
 
 
@@ -100,12 +101,12 @@ def process_environment(opt):
         return
     # environment setup
     # check if env exist and delete old one
-    envs = scene.items(itype=c.ENVIRONMENT_TYPE)
+    envs = modo.Scene().items(itype=c.ENVIRONMENT_TYPE)
     for env in envs:
         env.channel('visCam').set(0)  # type:ignore
         for item in env.children():
             if item.type == 'imageMap':
-                scene.removeItems(item)
+                modo.Scene().removeItems(item)
         lx.eval('texture.new "{}"'.format(opt.ENV_PATH))
         lx.eval('texture.parent {} 1'.format(env.id))
         lx.eval('item.channel (anyTxtrLocator)$projType spherical')
@@ -126,8 +127,8 @@ def process_camera(camera, opt):
     lx.eval('transform.channel rot.X {}'.format(opt.CAM_ROT_X))
     lx.eval('transform.channel rot.Y {}'.format(opt.CAM_ROT_Y))
     lx.eval('transform.channel rot.Z {}'.format(0.0))
-    scene.deselect()
-    for mesh in scene.items(itype=c.MESH_TYPE):
+    modo.Scene().deselect()
+    for mesh in modo.Scene().items(itype=c.MESH_TYPE):
         mesh.select()
     lx.eval('view3d.projection cam')
     lx.eval('camera.fit true true')
@@ -139,7 +140,7 @@ def save_as_preset_name(filename, opt):
         return
     # save the scene
     if filename != '':
-        lx.eval('scene.saveAs "{}/{}.lxo" $LXOB false'.format(opt.STORE_DIR, filename))
+        lx.eval('modo.Scene().saveAs "{}/{}.lxo" $LXOB false'.format(opt.STORE_DIR, filename))
 
 
 class UiOptions:
@@ -183,7 +184,7 @@ def main():
             message='Environment image map <{}> doesn\'t exist, please set valid image map path'.format(opt.ENV_PATH),
             dtype='error'
         )
-        exit()
+        h3dd.exit()
 
     # check if store directory exist
     if not os.path.exists(opt.STORE_DIR) and opt.SAVE_ENABLED:
@@ -192,7 +193,7 @@ def main():
             message='Directory <{}> doesn\'t exist, please select valid store directory'.format(opt.STORE_DIR),
             dtype='error'
         )
-        exit()
+        h3dd.exit()
 
     if lx.args():
         for arg in lx.args():  # type:ignore
@@ -201,7 +202,7 @@ def main():
                 opt.SAVE_ENABLED = False
 
     # get selected groups list
-    groups = scene.selectedByType(itype=c.GROUP_TYPE)
+    groups = modo.Scene().selectedByType(itype=c.GROUP_TYPE)
     # get root assemblies list
     root_assemblies = [item for item in groups if not item.itemGraph('parent').forward()]
     process_assemblies(root_assemblies, opt)
@@ -215,14 +216,16 @@ def main():
     process_environment(opt)
 
     # select camera 'Camera' or first one in the scene
-    cameras = scene.items(itype=c.CAMERA_TYPE, name='Camera')
+    cameras = modo.Scene().items(itype=c.CAMERA_TYPE, name='Camera')
     if not cameras:
-        cameras = scene.cameras
+        cameras = modo.Scene().cameras
     if cameras:
         process_camera(cameras[0], opt)
 
     # get root material mask list
-    root_masks = [mask for mask in scene.items(itype=c.MASK_TYPE) if mask.parent.type == 'polyRender']  # type:ignore
+    root_masks = [
+        mask for mask in modo.Scene().items(itype=c.MASK_TYPE) if mask.parent.type == 'polyRender'  # type:ignore
+        ]
     # move root_mask children to root
     preset_name = ''
     for mask in root_masks:
@@ -232,9 +235,9 @@ def main():
         preset_name = mask.name[:-15]
         for mask_child in mask.children(recursive=False):
             if mask_child.type == 'mask':
-                mask_child.setParent(scene.renderItem, 1)
+                mask_child.setParent(modo.Scene().renderItem, 1)
         # remove root_mask
-        scene.removeItems(mask)
+        modo.Scene().removeItems(mask)
 
     save_as_preset_name(preset_name, opt)
 
@@ -242,5 +245,5 @@ def main():
 
 
 if __name__ == '__main__':
-    scene = modo.Scene()
+    h3dd = H3dDebug(enable=False, file=modo.Scene().name + '.log')
     main()
