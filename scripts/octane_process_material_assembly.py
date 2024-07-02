@@ -179,23 +179,13 @@ def main():
     # global REND_SETUP
     # check if environment image map exist
     if not os.path.exists(opt.ENV_PATH) and opt.ENV_SETUP:
-        # modo.dialogs.alert(
-        #     title='Environment image map error',
-        #     message='Environment image map <{}> doesn\'t exist, please set valid image map path'.format(opt.ENV_PATH),
-        #     dtype='error'
-        # )
-        # h3dd.exit()
         message = 'Environment image map <{}> doesn\'t exist, please set valid image map path'.format(opt.ENV_PATH)
         print(message)
 
     # check if store directory exist
     if not os.path.exists(opt.STORE_DIR) and opt.SAVE_ENABLED:
-        modo.dialogs.alert(
-            title='Directory error',
-            message='Directory <{}> doesn\'t exist, please select valid store directory'.format(opt.STORE_DIR),
-            dtype='error'
-        )
-        h3dd.exit()
+        message = 'Directory <{}> doesn\'t exist, please select valid store directory'.format(opt.STORE_DIR),
+        print(message)
 
     if lx.args():
         for arg in lx.args():  # type:ignore
