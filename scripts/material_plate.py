@@ -38,15 +38,11 @@ def get_shader_tree_materials() -> list[modo.Item]:
 
 
 def get_plate_mesh() -> modo.Item:
-    meshes = scene.items("mesh", "material plate")
-    if not meshes:
-        # add unit plane item
-        lx.eval('script.run "macro.scriptservice:32235733444:macro"')
-        lx.eval('item.name "material plate" mesh')
-        meshes = scene.items("mesh", "material plate")
+    # add unit plane item
+    lx.eval('script.run "macro.scriptservice:32235733444:macro"')
+    lx.eval('item.name "material plate" mesh')
 
-    plate_mesh: modo.Item = meshes[0]
-    plate_mesh.select(replace=True)
+    plate_mesh: modo.Item = modo.Scene().selectedByType(itype='mesh')[0]
     if plate_mesh.parent:
         lx.eval("item.parent parent:{}")
     lx.eval("item.editorColor red")
@@ -84,17 +80,15 @@ def main():
     args = lx.args()
     if args:
         selected = ARG_SELECTED in args
-
     if not selected:
         materials = get_shader_tree_materials()
     else:
         materials = get_selected_materials()
 
     material_plate_mesh = get_plate_mesh()
-
     subdivide_until(material_plate_mesh, len(materials))
-
     fill_with_materials(material_plate_mesh, materials)
+    material_plate_mesh.select(replace=True)
 
     print("materials/polygons: {}/{}".format(len(materials), material_plate_mesh.geometry.numPolygons))
 
