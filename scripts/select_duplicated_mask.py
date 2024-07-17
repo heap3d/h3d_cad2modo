@@ -10,42 +10,43 @@
 import modo
 import lx
 
-scene = modo.Scene()
+from h3d_utilites.scripts.h3d_debug import H3dDebug
+from h3d_utilites.scripts.h3d_utils import replace_file_ext
 
-compare_by_material_tag = False
-compare_by_selection_set_tag = False
-compare_by_part_tag = False
-compare_by_item_mask = False
-compare_by_all = False
-clear_selection = False
-delete_material_mask = False
 
-cbl_all = 'all'
-cbl_material = 'material'
-cbl_selection_set = 'selection set'
-cbl_part = 'part'
-cbl_item_mask = 'item mask'
+COMPARE_BY_MATERIAL_TAG = False
+COMPARE_BY_SELECTION_SET_TAG = False
+COMPARE_BY_PART_TAG = False
+COMPARE_BY_ITEM_MASK = False
+COMPARE_BY_ALL = False
+CLEAR_SELECTION = False
+DELETE_MATERIAL_MASK = False
+
+CBL_ALL = 'all'
+CBL_MATERIAL = 'material'
+CBL_SELECTION_SET = 'selection set'
+CBL_PART = 'part'
+CBL_ITEM_MASK = 'item mask'
 
 # comparedBy user.value
-userVal_compareBy_name = 'h3d_select_duplicated_compareBy'
-userVal_compareBy_username = 'select duplicated material mask by'
-userVal_compareBy_dialogname = 'choose selection filter'
-userVal_compareBy_list = '{0};{1};{2};{3};{4}'.format(cbl_all, cbl_item_mask, cbl_material, cbl_selection_set, cbl_part)
-
+USERVAL_COMPAREBY_NAME = 'h3d_select_duplicated_compareBy'
+USERVAL_COMPAREBY_USERNAME = 'select duplicated material mask by'
+USERVAL_COMPAREBY_DIALOGNAME = 'choose selection filter'
+USERVAL_COMPAREBY_LIST = f'{CBL_ALL};{CBL_ITEM_MASK};{CBL_MATERIAL};{CBL_SELECTION_SET};{CBL_PART}'
 # clear_selection user.value
-userVal_clear_selection_name = 'h3d_select_duplicated_clear_selection'
-userVal_clear_selection_username = 'clear selection'
+USERVAL_CLEAR_SELECTION_NAME = 'h3d_select_duplicated_clear_selection'
+USERVAL_CLEAR_SELECTION_USERNAME = 'clear selection'
 userVal_clear_selection_dialogname = 'turn ON to clear selection'
 
 # delete_material_mask user.value
-userVal_delete_material_mask_name = 'h3d_select_duplicated_delete_material_mask'
-userVal_delete_material_mask_username = 'delete material mask'
-userVal_delete_material_mask_dialogname = 'turn ON to delete material mask'
+USERVAL_DELETE_MATERIAL_MASK_NAME = 'H3D_SELECT_DUPLICATED_DELETE_MATERIAL_MASK'
+USERVAL_DELETE_MATERIAL_MASK_USERNAME = 'delete material mask'
+USERVAL_DELETE_MATERIAL_MASK_DIALOGNAME = 'turn ON to delete material mask'
 
 
 def get_mask_list():
     mtag_mask_list = []
-    if compare_by_material_tag:
+    if COMPARE_BY_MATERIAL_TAG:
         # include mask with Polygon Tag Type <Material> only and polygon tag not <(all)>
         for mask_item in scene.renderItem.children(True, 'mask'):
             tag_type = mask_item.channel('ptyp').get()  # type: ignore
@@ -122,4 +123,6 @@ def main():
 
 
 if __name__ == '__main__':
+    scene = modo.Scene()
+    h3dd = H3dDebug(enable=True, file=scene.name + '.log')
     main()
