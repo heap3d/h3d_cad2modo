@@ -11,9 +11,8 @@ import modo
 import lx
 
 from h3d_utilites.scripts.h3d_debug import H3dDebug
+from h3d_utilites.scripts.h3d_utils import get_ptag_type, get_item_mask, get_ptag
 
-
-EMPTY_PTAG = 'Material'
 
 COMPARE_BY_MATERIAL_TAG = False
 COMPARE_BY_SELECTION_SET_TAG = False
@@ -58,25 +57,6 @@ def get_mask_list():
     else:
         mtag_mask_list = scene.renderItem.children(True, 'mask')
     return mtag_mask_list
-
-
-def get_ptag(mask_item):
-    ptag = mask_item.channel('ptag').get()
-    if not ptag:
-        return EMPTY_PTAG
-    return ptag
-
-
-def get_ptag_type(mask_item):
-    ptyp = mask_item.channel('ptyp').get()
-    printd(f'{mask_item.name} ptag type: <{ptyp}>', 4)
-    return ptyp
-
-
-def get_item_mask(mask_item):
-    mask_item.select(True)
-    item_mask = lx.eval('mask.setMesh ?')
-    return item_mask
 
 
 def are_mask_equal(mask1, mask2):
@@ -149,7 +129,7 @@ def main():
 
 if __name__ == '__main__':
     scene = modo.Scene()
-    h3dd = H3dDebug(enable=True, file=scene.name + '.log')
+    h3dd = H3dDebug(enable=False, file=scene.name + '.log')
     printd = h3dd.print_debug
     printi = h3dd.print_items
 
