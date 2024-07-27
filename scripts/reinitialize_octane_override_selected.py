@@ -16,7 +16,15 @@ from h3d_utilites.scripts.h3d_utils import replace_file_ext
 
 
 def main():
-    nodes = scene.selectedByType(itype='material.octaneRenderer')
+    selected = scene.selected
+    children = selected[:]
+
+    for item in selected:
+        if item.children():
+            children = children + item.children(recursive=True)
+
+    nodes = [item for item in children if item.type == 'material.octaneRenderer']
+
     for node in nodes:
         reinitialize_octane_override(node)
 
