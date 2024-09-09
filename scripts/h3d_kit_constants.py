@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # ================================
-# (C)2022 Dmytro Holub
+# (C)2022-2024 Dmytro Holub
 # heap3d@gmail.com
 # --------------------------------
 # modo python
@@ -29,14 +29,6 @@ MISSING_COLOR = '0.0 1.0 0.0'
 SELECT_TAG_ID = 0
 SOURCE_TAG_ID = 1
 TARGET_TAG_ID = 2
-
-RM_PREV = 1
-RM_NEXT = 2
-RM_SAVE = 3
-RM_SCAN = 4
-RM_LOAD = 5
-RM_APPLY = 6
-RM_SELECT = 7
 
 RENDER_RESOLUTION = 512
 RENDER_AA = 's64'

@@ -15,6 +15,9 @@ from h3d_utilites.scripts.h3d_utils import is_material_ptyp, replace_file_ext
 from h3d_utilites.scripts.h3d_debug import H3dDebug
 
 
+DEFAULT = 'default'
+
+
 def get_mask_ptags(masks):
     ptags = set()
     for mask in masks:
@@ -77,7 +80,10 @@ def assign_new_material(geo_ptag, specific_color_str=None):
                 color_str = get_color_str(geo_ptag)
             else:
                 color_str = specific_color_str
-            lx.eval('poly.setMaterial "{}" {{{}}} {} {}'.format(geo_ptag, color_str, '0.8', '0.04'))
+            try:
+                lx.eval('!poly.setMaterial "{}" {{{}}} {} {}'.format(geo_ptag, color_str, '0.8', '0.04'))
+            except RuntimeError:
+                print(f'Failed set material: <{geo_ptag}>')
             # assign material for one polygon only, there is no need for do it for all polygons
             return
 

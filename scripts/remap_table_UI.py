@@ -31,6 +31,17 @@ UV_TYPE_INTEGER = 'integer'
 UV_TYPE_COLOR = 'color'
 UV_LIFE_TEMPORARY = 'temporary'
 
+CMD_PREV = '-prev'
+CMD_NEXT = '-next'
+CMD_SCAN = '-scan'
+CMD_SAVE = '-save'
+CMD_LOAD = '-load'
+CMD_APPLY = '-apply'
+CMD_SELECT = '-select'
+CMD_CREATE_MISSING_MATS = '-createmats'
+
+DEFAULT = 'default'
+
 
 def get_page_start():
     page_start = get_user_value(h3dc.USERVAL_NAME_PAGE_START)
@@ -46,31 +57,23 @@ def set_page_start(start, tags):
     return get_page_start()
 
 
-def get_run_mode(args: list[str]):
-    arg_command = args[0]
-    mode = h3dc.RM_SCAN
-    if arg_command == '-prev':
-        mode = h3dc.RM_PREV
-    elif arg_command == '-next':
-        mode = h3dc.RM_NEXT
-    elif arg_command == '-scan':
-        mode = h3dc.RM_SCAN
-    elif arg_command == '-save':
-        mode = h3dc.RM_SAVE
-    elif arg_command == '-load':
-        mode = h3dc.RM_LOAD
-    elif arg_command == '-apply':
-        mode = h3dc.RM_APPLY
-    elif arg_command == '-select':
-        mode = h3dc.RM_SELECT
-    else:
-        print('Unknown argument(s):', args)
-    return mode
+def get_command(args: list[str]):
+    cmd_map = {
+        CMD_PREV: CMD_PREV,
+        CMD_NEXT: CMD_NEXT,
+        CMD_SCAN: CMD_SCAN,
+        CMD_SAVE: CMD_SAVE,
+        CMD_LOAD: CMD_LOAD,
+        CMD_APPLY: CMD_APPLY,
+        CMD_SELECT: CMD_SELECT,
+        CMD_CREATE_MISSING_MATS: CMD_CREATE_MISSING_MATS,
+    }
+    return cmd_map.get(args[0], CMD_SCAN)
 
 
-def get_tags_list(mode):
+def get_tags_list(command):
     tags = list()
-    if mode != h3dc.RM_SCAN:
+    if command != CMD_SCAN:
         # read colors list from user value
         try:
             colors_string_store = get_user_value(h3dc.USERVAL_NAME_COLORS_STORE)
@@ -120,8 +123,8 @@ def get_tags_list(mode):
     return tags
 
 
-def get_materials_list(mode, tags):
-    if mode != h3dc.RM_SCAN:
+def get_materials_list(command, tags):
+    if command != CMD_SCAN:
         materials_string_store = get_user_value(h3dc.USERVAL_NAME_MATERIALS_STORE)
 
         h3dd.print_items(
@@ -611,33 +614,25 @@ def select_polygons_by_tag(select_material_tag):
             continue
         if not is_material_ptyp(mask.channel('ptyp').get()):  # type:ignore
             continue
-        if (
-            mask.channel('ptag').get().replace(h3dc.MATERIAL_SUFFIX, '')  # type:ignore
-            == select_material_tag
-        ):
+        if mask.channel('ptag').get().replace(h3dc.MATERIAL_SUFFIX, '') == select_material_tag:  # type: ignore
             mask.select(replace=True)
             is_mask_selected = True
             break
     if is_mask_selected:
         lx.eval('material.selectPolygons')
         return
-    # add tmp mesh
     tmp_mesh = scene.addMesh()
     tmp_mesh.select(replace=True)
     # add unit cube into current mesh item
     lx.eval('script.run "macro.scriptservice:32235710027:macro"')
-    # assign searching material
     lx.eval(
         'poly.setMaterial "{}" {{0.6 0.6 0.6}} 0.8 0.04 true false false'.format(
             select_material_tag
         )
     )
     seaching_mask = scene.selectedByType(itype=c.MASK_TYPE)[0]
-    # delete tmp mesh
     scene.removeItems(tmp_mesh)
-    # select searching material
     seaching_mask.select(replace=True)
-    # select polygons by material
     lx.eval('material.selectPolygons')
 
 
@@ -674,12 +669,12 @@ def main():
 
     args = lx.args()
     if not args:
-        raise ValueError('Missing run mode argument')
-    run_mode = get_run_mode(args)
-    global_tags = get_tags_list(mode=run_mode)
-    global_materials = get_materials_list(mode=run_mode, tags=global_tags)
+        raise ValueError('Missing command argument')
+    command = get_command(args)
+    global_tags = get_tags_list(command=command)
+    global_materials = get_materials_list(command=command, tags=global_tags)
     # clear previous table and user variables
-    if run_mode == h3dc.RM_SCAN:
+    if command == CMD_SCAN:
         global_tags_materials_map = scan_init(
             tags=global_tags, materials=global_materials
         )
@@ -696,7 +691,7 @@ def main():
             start=get_page_start(),
         )
 
-    if run_mode == h3dc.RM_PREV:
+    if command == CMD_PREV:
         global_tags_materials_map = update_table(
             tags=global_tags, start=get_page_start()
         )
@@ -708,7 +703,7 @@ def main():
             start=get_page_start(),
         )
 
-    if run_mode == h3dc.RM_NEXT:
+    if command == CMD_NEXT:
         global_tags_materials_map = update_table(
             tags=global_tags, start=get_page_start()
         )
@@ -720,7 +715,7 @@ def main():
             start=get_page_start(),
         )
 
-    if run_mode == h3dc.RM_SAVE:
+    if command == CMD_SAVE:
         global_tags_materials_map = update_table(
             tags=global_tags, start=get_page_start()
         )
@@ -730,7 +725,7 @@ def main():
             tags_materials_map=global_tags_materials_map,
         )
 
-    if run_mode == h3dc.RM_LOAD:
+    if command == CMD_LOAD:
         global_tags_materials_map = update_table(
             tags=global_tags, start=get_page_start()
         )
@@ -747,7 +742,7 @@ def main():
             start=get_page_start(),
         )
 
-    if run_mode == h3dc.RM_APPLY:
+    if command == CMD_APPLY:
         # update table to get all changes from UI
         global_tags_materials_map = update_table(
             tags=global_tags, start=get_page_start()
@@ -759,8 +754,8 @@ def main():
             tags_materials_map=global_tags_materials_map,
         )
         # rescan scene to get updated state
-        global_tags = get_tags_list(mode=h3dc.RM_SCAN)
-        global_materials = get_materials_list(mode=h3dc.RM_SCAN, tags=global_tags)
+        global_tags = get_tags_list(command=CMD_SCAN)
+        global_materials = get_materials_list(command=CMD_SCAN, tags=global_tags)
         global_tags_materials_map = scan_init(
             tags=global_tags, materials=global_materials
         )
@@ -771,12 +766,18 @@ def main():
             start=set_page_start(start=1, tags=global_tags),
         )
 
-    if run_mode == h3dc.RM_SELECT:
+    if command == CMD_SELECT:
         arg_mode, line_id_str = lx.args()  # type:ignore
         line_id = int(line_id_str)
         tag_id = int(line_id) + get_page_start() - 1
         select_polygons_by_tag(global_tags[tag_id])
         deselect_hidden()
+
+    if command == CMD_CREATE_MISSING_MATS:
+        for tag in global_tags:
+            select_polygons_by_tag(tag)
+        lx.eval('select.drop polygon')
+        modo.Scene().deselect()
 
     print('remap_table_UI.py done.')
 
