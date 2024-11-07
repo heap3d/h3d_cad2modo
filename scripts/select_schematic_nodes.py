@@ -23,7 +23,7 @@ class NodeSelection():
 def select_schematic_nodes(items: list[modo.Item], mode: str = NodeSelection.ADD) -> None:
     for item in items:
         schematic_node = item.itemGraph('schmItem').forward()[-1]  # type: ignore
-        evalstr = f'select.node {schematic_node.id} {mode} {schematic_node.id}'
+        evalstr = f'select.node {{{schematic_node.id}}} {mode} {{{schematic_node.id}}}'
         print(evalstr)
         lx.eval(evalstr)
 
