@@ -242,10 +242,13 @@ def remove_items_from_scene(items):
     items = items - environments
 
     # octane material overrides
-    octane_mats = set(scene.items(itype="material.octaneRenderer"))
-    for octane_mat in octane_mats:
-        delete_item(octane_mat)
-    items = items - octane_mats
+    try:
+        octane_mats = set(scene.items(itype="material.octaneRenderer"))
+        for octane_mat in octane_mats:
+            delete_item(octane_mat)
+        items = items - octane_mats
+    except LookupError:
+        print('Octane Overrides not found.')
 
     # delete rest of the items
     for item in items:
