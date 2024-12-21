@@ -31,6 +31,7 @@
 		<source target="h3d_cad2modo/scripts/select_duplicated_mask.py">scripts/select_duplicated_mask.py</source>
 		<source target="h3d_cad2modo/scripts/select_item_groups.py">scripts/select_item_groups.py</source>
 		<source target="h3d_cad2modo/scripts/select_schematic_nodes.py">scripts/select_schematic_nodes.py</source>
+		<source target="h3d_cad2modo/scripts/select_siblings.py">scripts/select_siblings.py</source>
 		<source target="h3d_cad2modo/scripts/select_texture_locators.py">scripts/select_texture_locators.py</source>
 		<source target="h3d_cad2modo/scripts/set_def_map_path.py">scripts/set_def_map_path.py</source>
 		<source target="h3d_cad2modo/scripts/set_directory.py">scripts/set_directory.py</source>
