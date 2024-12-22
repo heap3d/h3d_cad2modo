@@ -161,58 +161,58 @@ def main():
     print('')
     print('octane_process_material_assembly.py start...')
 
-    opt = UiOptions()
+    ui_options = UiOptions()
     # get user values from UI
-    opt.CAM_ROT_X = math.degrees(get_user_value(h3dc.USER_VAL_CAM_ROT_X_NAME))
-    opt.CAM_ROT_Y = math.degrees(get_user_value(h3dc.USER_VAL_CAM_ROT_Y_NAME))
-    opt.ENV_ROT_Y = math.degrees(get_user_value(h3dc.USER_VAL_ENV_ROT_Y_NAME))
-    opt.ENV_PATH = get_user_value(h3dc.USER_VAL_ENV_PATH_NAME)
-    opt.STORE_DIR = get_user_value(h3dc.USER_VAL_STORE_DIR_NAME)
-    opt.SAVE_ENABLED = get_user_value(h3dc.USER_VAL_SAVE_ENABLED_NAME)
-    opt.REND_SETUP = get_user_value(h3dc.USER_VAL_REND_SETUP_NAME)
-    opt.OCTMAT_SETUP = get_user_value(h3dc.USER_VAL_OCTMAT_SETUP_NAME)
-    opt.LIGHT_SETUP = get_user_value(h3dc.USER_VAL_LIGHT_SETUP_NAME)
-    opt.CAM_SETUP = get_user_value(h3dc.USER_VAL_CAM_SETUP_NAME)
-    opt.ENV_SETUP = get_user_value(h3dc.USER_VAL_ENV_SETUP_NAME)
+    ui_options.CAM_ROT_X = math.degrees(get_user_value(h3dc.USER_VAL_CAM_ROT_X_NAME))
+    ui_options.CAM_ROT_Y = math.degrees(get_user_value(h3dc.USER_VAL_CAM_ROT_Y_NAME))
+    ui_options.ENV_ROT_Y = math.degrees(get_user_value(h3dc.USER_VAL_ENV_ROT_Y_NAME))
+    ui_options.ENV_PATH = get_user_value(h3dc.USER_VAL_ENV_PATH_NAME)
+    ui_options.STORE_DIR = get_user_value(h3dc.USER_VAL_STORE_DIR_NAME)
+    ui_options.SAVE_ENABLED = get_user_value(h3dc.USER_VAL_SAVE_ENABLED_NAME)
+    ui_options.REND_SETUP = get_user_value(h3dc.USER_VAL_REND_SETUP_NAME)
+    ui_options.OCTMAT_SETUP = get_user_value(h3dc.USER_VAL_OCTMAT_SETUP_NAME)
+    ui_options.LIGHT_SETUP = get_user_value(h3dc.USER_VAL_LIGHT_SETUP_NAME)
+    ui_options.CAM_SETUP = get_user_value(h3dc.USER_VAL_CAM_SETUP_NAME)
+    ui_options.ENV_SETUP = get_user_value(h3dc.USER_VAL_ENV_SETUP_NAME)
 
     # global SAVE_ENABLED
     # global REND_SETUP
     # check if environment image map exist
-    if not os.path.exists(opt.ENV_PATH) and opt.ENV_SETUP:
-        message = 'Environment image map <{}> doesn\'t exist, please set valid image map path'.format(opt.ENV_PATH)
+    if not os.path.exists(ui_options.ENV_PATH) and ui_options.ENV_SETUP:
+        message = f'Environment image map <{ui_options.ENV_PATH}> doesn\'t exist, please set valid image map path'
         print(message)
 
     # check if store directory exist
-    if not os.path.exists(opt.STORE_DIR) and opt.SAVE_ENABLED:
-        message = 'Directory <{}> doesn\'t exist, please select valid store directory'.format(opt.STORE_DIR),
+    if not os.path.exists(ui_options.STORE_DIR) and ui_options.SAVE_ENABLED:
+        message = f'Directory <{ui_options.STORE_DIR}> doesn\'t exist, please select valid store directory'
         print(message)
 
     if lx.args():
         for arg in lx.args():  # type:ignore
             if arg == '-repair':
-                opt.REND_SETUP = False
-                opt.SAVE_ENABLED = False
+                ui_options.REND_SETUP = False
+                ui_options.SAVE_ENABLED = False
 
     # get selected groups list
     groups = modo.Scene().selectedByType(itype=c.GROUP_TYPE)
     # get root assemblies list
     root_assemblies = [item for item in groups if not item.itemGraph('parent').forward()]
-    process_assemblies(root_assemblies, opt)
+    process_assemblies(root_assemblies, ui_options)
 
-    process_octane_overrides(opt)
+    process_octane_overrides(ui_options)
 
-    process_render_settings(opt)
+    process_render_settings(ui_options)
 
-    process_lights(opt)
+    process_lights(ui_options)
 
-    process_environment(opt)
+    process_environment(ui_options)
 
     # select camera 'Camera' or first one in the scene
     cameras = modo.Scene().items(itype=c.CAMERA_TYPE, name='Camera')
     if not cameras:
         cameras = modo.Scene().cameras
     if cameras:
-        process_camera(cameras[0], opt)
+        process_camera(cameras[0], ui_options)
 
     # get root material mask list
     root_masks = [
@@ -231,7 +231,7 @@ def main():
         # remove root_mask
         modo.Scene().removeItems(mask)
 
-    save_as_preset_name(preset_name, opt)
+    save_as_preset_name(preset_name, ui_options)
 
     print('octane_process_material_assembly.py done.')
 

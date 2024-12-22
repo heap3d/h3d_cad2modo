@@ -37,6 +37,7 @@
 		<source target="h3d_cad2modo/scripts/set_filename.py">scripts/set_filename.py</source>
 		<source target="h3d_cad2modo/scripts/set_reflib_directory.py">scripts/set_reflib_directory.py</source>
 		<source target="h3d_cad2modo/scripts/split_mesh_by_material.py">scripts/split_mesh_by_material.py</source>
+		<source target="h3d_cad2modo/scripts/textures_gl_display.py">scripts/textures_gl_display.py</source>
 		<source target="h3d_cad2modo/scripts/unassigned_ptags.py">scripts/unassigned_ptags.py</source>
 	</kit>
 	<message button="Help">h3d_cad2modo Kit installation complete.</message>
