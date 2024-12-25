@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # ================================
-# (C)2024 Dmytro Holub
+# (C)2023-2024 Dmytro Holub
 # heap3d@gmail.com
 # --------------------------------
 # modo python
-# select items at the same level of hierarchy as the selected
+# select parent for selected items
 # ================================
 
 import modo
@@ -20,10 +20,8 @@ def main():
         parent = item.parent
         if not parent:
             item.select()
-            continue
-        children = parent.children()
-        for child in children:
-            child.select()
+        else:
+            parent.select()
 
 
 if __name__ == '__main__':

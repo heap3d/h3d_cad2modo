@@ -4,7 +4,7 @@
 # heap3d@gmail.com
 # --------------------------------
 # modo python
-# select items at the same level of hierarchy as the selected
+# select items same type at the same level of hierarchy as the selected
 # ================================
 
 import modo
@@ -13,6 +13,7 @@ import modo.constants as c
 
 def main():
     selected: list[modo.Item] = modo.Scene().selectedByType(itype=c.LOCATOR_TYPE, superType=True)
+    selected_types = set([item.type for item in selected])
 
     modo.Scene().deselect()
 
@@ -23,7 +24,8 @@ def main():
             continue
         children = parent.children()
         for child in children:
-            child.select()
+            if child.type in selected_types:
+                child.select()
 
 
 if __name__ == '__main__':
