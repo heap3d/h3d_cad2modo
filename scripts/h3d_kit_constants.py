@@ -51,3 +51,5 @@ USER_VAL_REFLIB_DIR_NAME = 'h3d_opma_reflib_dir'
 USER_VAL_NAME_ENV_PATH_NAME = 'h3d_opma_env_path'
 
 USER_VAL_NAME_SPECIFIC_COLOR = 'h3d_arm_specific_color'
+
+USERVAL_IGNORE_HIDDEN = 'h3d_set_ignore_hidden'

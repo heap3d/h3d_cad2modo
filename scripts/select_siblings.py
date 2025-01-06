@@ -10,15 +10,17 @@
 import modo
 import modo.constants as c
 
-from h3d_utilites.scripts.h3d_utils import get_user_value
+from h3d_utilites.scripts.h3d_utils import get_user_value, is_visible
 
-
-USERVAL_IGNORE_HIDDEN = 'h3d_set_ignore_hidden'
+from h3d_cad2modo.scripts.h3d_kit_constants import USERVAL_IGNORE_HIDDEN
 
 
 def main():
-    ignore_hidden = get_user_value(USERVAL_IGNORE_HIDDEN)
-    selected: list[modo.Item] = modo.Scene().selectedByType(itype=c.LOCATOR_TYPE, superType=True)
+    ignore_hidden = bool(get_user_value(USERVAL_IGNORE_HIDDEN))
+    if ignore_hidden:
+        selected = get_selected_visible()
+    else:
+        selected = get_selected()
 
     modo.Scene().deselect()
 
@@ -27,13 +29,33 @@ def main():
         if not parent:
             item.select()
             continue
-        children = [i for i in parent.children() if not is_hidden(i)]
+
+        if ignore_hidden:
+            children = get_children_visible(parent)
+        else:
+            children = parent.children()
+
         for child in children:
             child.select()
 
 
-def is_hidden(item: modo.Item) -> bool:
-    ...
+def get_selected() -> list[modo.Item]:
+    return modo.Scene().selectedByType(itype=c.LOCATOR_TYPE, superType=True)
+
+
+def get_selected_visible() -> list[modo.Item]:
+    return [
+        i
+        for i in modo.Scene().selectedByType(itype=c.LOCATOR_TYPE, superType=True)
+        if is_visible(i)
+    ]
+
+
+def get_children_visible(item: modo.Item) -> list[modo.Item]:
+    if not item:
+        return []
+    
+    return [i for i in item.children() if is_visible(i)]
 
 
 if __name__ == '__main__':
