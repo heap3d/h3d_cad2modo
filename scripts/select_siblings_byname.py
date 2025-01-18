@@ -16,6 +16,8 @@ from h3d_utilites.scripts.h3d_utils import get_user_value
 from h3d_cad2modo.scripts.h3d_kit_constants import USERVAL_IGNORE_HIDDEN
 from h3d_cad2modo.scripts.select_siblings import get_selected, get_children, get_root_children
 
+REGEX_PATTERN = r'^(.*?)[._ (d)]*[ ().\d]*\d*\)?$'
+
 
 def main():
     visible_only = bool(get_user_value(USERVAL_IGNORE_HIDDEN))
@@ -44,12 +46,7 @@ def main():
         item.select()
 
 
-def is_name_similar(name: str, template: str, regex_pattern: str = '') -> bool:
-    if not regex_pattern:
-        # default strip_pattern for modo copies naming: item (2); item(2); item 2; item_2; item2
-        # strip_pattern = r'^(.*?)[ _(\d\)]*$'
-        regex_pattern = r'^(.*?)[._ (d)]*[ ().\d]*\d*\)?$'
-
+def is_name_similar(name: str, template: str, regex_pattern=REGEX_PATTERN) -> bool:
     template_match = re.match(regex_pattern, template)
     if not template_match:
         template_stripped = template
