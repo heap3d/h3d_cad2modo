@@ -32,6 +32,7 @@
 		<source target="h3d_cad2modo/scripts/select_item_groups.py">scripts/select_item_groups.py</source>
 		<source target="h3d_cad2modo/scripts/select_parent.py">scripts/select_parent.py</source>
 		<source target="h3d_cad2modo/scripts/select_schematic_nodes.py">scripts/select_schematic_nodes.py</source>
+		<source target="h3d_cad2modo/scripts/select_siblings_byname_regex.py">scripts/select_siblings_byname_regex.py</source>
 		<source target="h3d_cad2modo/scripts/select_siblings_byname.py">scripts/select_siblings_byname.py</source>
 		<source target="h3d_cad2modo/scripts/select_siblings_bytype_byname.py">scripts/select_siblings_bytype_byname.py</source>
 		<source target="h3d_cad2modo/scripts/select_siblings_bytype.py">scripts/select_siblings_bytype.py</source>

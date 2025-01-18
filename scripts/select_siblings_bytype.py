@@ -12,33 +12,34 @@ import modo
 from h3d_utilites.scripts.h3d_utils import get_user_value
 
 from h3d_cad2modo.scripts.h3d_kit_constants import USERVAL_IGNORE_HIDDEN
-from h3d_cad2modo.scripts.select_siblings import get_selected, get_selected_visible, get_children_visible
+from h3d_cad2modo.scripts.select_siblings import get_selected, get_children, get_root_children
 
 
 def main():
-    ignore_hidden = bool(get_user_value(USERVAL_IGNORE_HIDDEN))
-    if ignore_hidden:
-        selected = get_selected_visible()
-    else:
-        selected = get_selected()
+    visible_only = bool(get_user_value(USERVAL_IGNORE_HIDDEN))
+    selected = get_selected(visible_only)
+    root_children = get_root_children(visible_only)
     selected_types = set([item.type for item in selected])
 
-    modo.Scene().deselect()
+    similar_children: set[modo.Item] = set()
 
     for item in selected:
+        if item in similar_children:
+            continue
         parent = item.parent
         if not parent:
-            item.select()
-            continue
-
-        if ignore_hidden:
-            children = get_children_visible(parent)
+            children = root_children
         else:
-            children = parent.children()
+            children = get_children(parent, visible_only)
 
         for child in children:
+            if child in similar_children:
+                continue
             if child.type in selected_types:
-                child.select()
+                similar_children.add(child)
+
+    for item in similar_children:
+        item.select()
 
 
 if __name__ == '__main__':
