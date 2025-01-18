@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # ================================
-# (C)2022-2024 Dmytro Holub
+# (C)2022-2025 Dmytro Holub
 # heap3d@gmail.com
 # --------------------------------
 # modo python
@@ -52,6 +52,5 @@ USER_VAL_NAME_ENV_PATH_NAME = 'h3d_opma_env_path'
 
 USER_VAL_NAME_SPECIFIC_COLOR = 'h3d_arm_specific_color'
 
-USERVAL_IGNORE_HIDDEN = 'h3d_set_ignore_hidden'
-
+USERVAL_IGNORE_HIDDEN = 'h3d_ssib_ignore_hidden'
 USERVAL_REGEX_PATTERN = 'h3d_ssib_regex'
