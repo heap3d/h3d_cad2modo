@@ -54,3 +54,5 @@ USER_VAL_NAME_SPECIFIC_COLOR = 'h3d_arm_specific_color'
 
 USERVAL_IGNORE_HIDDEN = 'h3d_ssib_ignore_hidden'
 USERVAL_REGEX_PATTERN = 'h3d_ssib_regex'
+
+REGEX_PATTERN = r'^(.*?)[._ (d)]*[ ().\d]*\d*\)?$'

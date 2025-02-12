@@ -1,26 +1,27 @@
 #!/usr/bin/python
 # ================================
-# (C)2024 Dmytro Holub
+# (C)2025 Dmytro Holub
 # heap3d@gmail.com
 # --------------------------------
 # modo python
-# select items at the same level of hierarchy as the selected, filtered by name
+# select items at the same level of hierarchy as the selected, filtered by the same type and the name pattern
 # ================================
-
-import re
 
 import modo
 
 from h3d_utilites.scripts.h3d_utils import get_user_value
 
-from h3d_cad2modo.scripts.h3d_kit_constants import USERVAL_IGNORE_HIDDEN, REGEX_PATTERN
+from h3d_cad2modo.scripts.h3d_kit_constants import USERVAL_IGNORE_HIDDEN, USERVAL_REGEX_PATTERN
 from h3d_cad2modo.scripts.select_siblings import get_selected, get_children, get_root_children
+from h3d_cad2modo.scripts.select_siblings_byname import is_name_similar
 
 
 def main():
     visible_only = bool(get_user_value(USERVAL_IGNORE_HIDDEN))
+    regex_pattern = get_user_value(USERVAL_REGEX_PATTERN)
     selected = get_selected(visible_only)
     root_children = get_root_children(visible_only)
+    selected_types = set([item.type for item in selected])
 
     similar_children: set[modo.Item] = set()
 
@@ -36,31 +37,12 @@ def main():
         for child in children:
             if child in similar_children:
                 continue
-            is_similar = is_name_similar(child.name, item.name)
+            is_similar = (child.type in selected_types) and is_name_similar(child.name, item.name, regex_pattern)
             if is_similar:
                 similar_children.add(child)
 
     for item in similar_children:
         item.select()
-
-
-def is_name_similar(name: str, template: str, regex_pattern=REGEX_PATTERN) -> bool:
-    template_match = re.match(regex_pattern, template)
-    if not template_match:
-        template_stripped = template
-    else:
-        template_stripped = template_match.group(1)
-
-    name_match = re.match(regex_pattern, name)
-    if not name_match:
-        name_sripped = name
-    else:
-        name_sripped = name_match.group(1)
-
-    if template_stripped.strip() == name_sripped.strip():
-        return True
-
-    return False
 
 
 if __name__ == '__main__':
