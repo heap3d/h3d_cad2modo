@@ -294,16 +294,14 @@ def build_line(ui_line, map_index, tags, materials, tags_materials_map):
     lx.eval('select.attr {{93645054749:sheet/{}}} set'.format(ui_line - 1))
     cur_line = lx.eval('select.attr ?')
     # select line source tag element
-    lx.eval('select.attr {{{}/{}}} set'.format(cur_line, h3dc.SOURCE_TAG_ID))
+    lx.eval(f'select.attr {{{cur_line}/{h3dc.SOURCE_TAG_ID}}} set')
     # assign tooltip to source tag element
-    lx.eval('attr.tooltip "{}: {}"'.format(map_index, tags[map_index]))
+    lx.eval(f'attr.tooltip "{map_index}: {{{tags[map_index]}}}"')
     # materials dropbox setup
     materials_list_string = ';'.join(['{}'.format(x) for x in range(len(materials))])
     materials_listnames_string = ';'.join(materials)
     lx.eval(
-        'user.def {} list "{}"'.format(
-            h3dc.USERVAL_NAME_MATERIAL_DEFAULT, materials_list_string
-        )
+        f'user.def {{{h3dc.USERVAL_NAME_MATERIAL_DEFAULT}}} list "{{{materials_list_string}}}"'
     )
     lx.eval(
         'user.def {} listnames "{}"'.format(
@@ -562,8 +560,8 @@ def apply_command(tags, materials, tags_materials_map):
         mesh.select(replace=False)
     lx.eval('select.type polygon')
     for source_tag, target_tag in selection_sets.items():
-        lx.eval('select.pickWorkingSet "{}" true'.format(source_tag))
-        lx.eval('select.pickWorkingSet "{}"'.format(source_tag))
+        lx.eval(f'select.pickWorkingSet {{{source_tag}}} true')
+        lx.eval(f'select.pickWorkingSet {{{source_tag}}}')
         try:
             lx.eval('!!select.selectWorkingSet 2')
         except RuntimeError as error:
