@@ -27,6 +27,7 @@
 		<source target="h3d_cad2modo/scripts/remove_duplicated_scene_items.py">scripts/remove_duplicated_scene_items.py</source>
 		<source target="h3d_cad2modo/scripts/remove_item_selection_sets.py">scripts/remove_item_selection_sets.py</source>
 		<source target="h3d_cad2modo/scripts/RGB - Materials Default.txt">scripts/RGB - Materials Default.txt</source>
+		<source target="h3d_cad2modo/scripts/script_end.wav">scripts/script_end.wav</source>
 		<source target="h3d_cad2modo/scripts/select_children.py">scripts/select_children.py</source>
 		<source target="h3d_cad2modo/scripts/select_deformable_meshes.py">scripts/select_deformable_meshes.py</source>
 		<source target="h3d_cad2modo/scripts/select_duplicated_mask.py">scripts/select_duplicated_mask.py</source>

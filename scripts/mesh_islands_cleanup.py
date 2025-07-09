@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # ================================
-# (C)2023 Dmytro Holub
+# (C)2023-2025 Dmytro Holub
 # heap3d@gmail.com
 # --------------------------------
 # modo python
@@ -8,28 +8,33 @@
 # mesh cleanup by mesh islands
 # select mesh items and run the script
 
+import webbrowser
+from pathlib import Path
+
 import lx
 import modo
 import modo.constants as c
 
-from h3d_utilites.scripts.h3d_utils import replace_file_ext, get_user_value
-from h3d_utilites.scripts.h3d_debug import H3dDebug
-from h3d_utilites.scripts.h3d_exceptions import H3dExitException
+from h3d_utilites.scripts.h3d_utils import get_user_value, set_user_value
 
 
-REMOVE_FLOATING_VERTICES = "h3d_imc_remove_floating_vertices"
-REMOVE_ONE_POINT_POLYGONS = "h3d_imc_remove_one_point_polygons"
-REMOVE_TWO_POINTS_POLYGONS = "h3d_imc_remove_two_points_polygons"
-FIX_DUPLICATE_POINTS_IN_POLYGON = "h3d_imc_fix_duplicate_points_in_polygon"
-REMOVE_COLINEAR_VERTICES = "h3d_imc_remove_colinear_vertices"
-FIX_FACE_NORMAL_VECTORS = "h3d_imc_fix_face_normal_vectors"
-MERGE_VERTICES = "h3d_imc_merge_vertices"
-MERGE_DISCO_VALUES = "h3d_imc_merge_disco_values"
-UNIFY_POLYGONS = "h3d_imc_unify_polygons"
-FORCE_UNIFY = "h3d_imc_force_unify"
-REMOVE_DISCO_WEIGHT_VALUES = "h3d_imc_remove_disco_weight_values"
-LAST_STEP_MERGE_VERTICES = "h3d_imc_merge_vertices_last_step"
-FIX_GAPS = "h3d_imc_fix_gaps"
+USERVAL_REMOVE_FLOATING_VERTICES = "h3d_imc_remove_floating_vertices"
+USERVAL_REMOVE_ONE_POINT_POLYGONS = "h3d_imc_remove_one_point_polygons"
+USERVAL_REMOVE_TWO_POINTS_POLYGONS = "h3d_imc_remove_two_points_polygons"
+USERVAL_FIX_DUPLICATE_POINTS_IN_POLYGON = "h3d_imc_fix_duplicate_points_in_polygon"
+USERVAL_REMOVE_COLINEAR_VERTICES = "h3d_imc_remove_colinear_vertices"
+USERVAL_FIX_FACE_NORMAL_VECTORS = "h3d_imc_fix_face_normal_vectors"
+USERVAL_MERGE_VERTICES = "h3d_imc_merge_vertices"
+USERVAL_MERGE_DISCO_VALUES = "h3d_imc_merge_disco_values"
+USERVAL_UNIFY_POLYGONS = "h3d_imc_unify_polygons"
+USERVAL_FORCE_UNIFY = "h3d_imc_force_unify"
+USERVAL_REMOVE_DISCO_WEIGHT_VALUES = "h3d_imc_remove_disco_weight_values"
+USERVAL_LAST_STEP_MERGE_VERTICES = "h3d_imc_merge_vertices_last_step"
+USERVAL_FIX_GAPS = "h3d_imc_fix_gaps"
+
+USERVAL_ALARM_ENABLED = 'h3d_imc_alarm_enabled'
+USERVAL_ALARM_SOUND_PATH = 'h3d_imc_alarm_sound'
+
 NOFINAL = 'nofinal'
 
 
@@ -50,6 +55,89 @@ class Options:
     final_mesh_cleanup = True
 
 
+def main():
+    print("")
+    print("start mesh_islands_cleanup.py ...")
+
+    options = Options()
+    options.remove_floating_vertices = get_user_value(USERVAL_REMOVE_FLOATING_VERTICES)
+    options.remove_one_point_polygons = get_user_value(USERVAL_REMOVE_ONE_POINT_POLYGONS)
+    options.remove_two_points_polygons = get_user_value(USERVAL_REMOVE_TWO_POINTS_POLYGONS)
+    options.fix_duplicate_points_in_polygon = get_user_value(USERVAL_FIX_DUPLICATE_POINTS_IN_POLYGON)
+    options.remove_colinear_vertices = get_user_value(USERVAL_REMOVE_COLINEAR_VERTICES)
+    options.fix_face_normal_vectors = get_user_value(USERVAL_FIX_FACE_NORMAL_VECTORS)
+    options.merge_vertices = get_user_value(USERVAL_MERGE_VERTICES)
+    options.merge_disco_values = get_user_value(USERVAL_MERGE_DISCO_VALUES)
+    options.unify_polygons = get_user_value(USERVAL_UNIFY_POLYGONS)
+    options.force_unify = get_user_value(USERVAL_FORCE_UNIFY)
+    options.remove_disco_weight_values = get_user_value(USERVAL_REMOVE_DISCO_WEIGHT_VALUES)
+    options.fix_gaps = get_user_value(USERVAL_FIX_GAPS)
+    options.last_step_merge_vertices = get_user_value(USERVAL_LAST_STEP_MERGE_VERTICES)
+
+    alarm_enabled = get_user_value(USERVAL_ALARM_ENABLED)
+    alarm_sound_path = get_user_value(USERVAL_ALARM_SOUND_PATH)
+    if alarm_enabled:
+        if not (alarm_sound_path and Path(alarm_sound_path).exists()):
+            result = modo.dialogs.fileOpen(ftype='', title='Specify alarm media file')
+            if not result:
+                print('Mesh Cleanup cancelled. Please select alarm file or turn alarm off.')
+                return
+
+            alarm_sound_path = str(result)
+            set_user_value(USERVAL_ALARM_SOUND_PATH, alarm_sound_path)
+
+    args = lx.args()
+    if args:
+        if args[0] == 'nofinal':
+            options.final_mesh_cleanup = False
+
+    selected_meshes: list[modo.Mesh] = modo.Scene().selectedByType(itype=c.MESH_TYPE)
+
+    for mesh in selected_meshes:
+        cleanup(mesh, options)
+
+    modo.Scene().deselect()
+    for item in selected_meshes:
+        item.select()
+
+    if options.final_mesh_cleanup:
+        mesh_cleanup_versions(options, last_step=True)
+
+    if alarm_enabled:
+        webbrowser.open(alarm_sound_path)
+
+
+def cleanup(mesh: modo.Mesh, options: Options):
+    mesh.select(replace=True)
+
+    root_index = mesh.rootIndex
+    parent_index = mesh.parentIndex
+
+    mesh_index = root_index if root_index is not None else parent_index
+    if not mesh_index:
+        mesh_index = 0
+
+    tmp_loc = modo.Scene().addItem(itype=c.GROUPLOCATOR_TYPE)
+    tmp_loc.setParent(mesh.parent)
+    mesh.setParent(tmp_loc)
+
+    mesh.select(replace=True)
+    lx.eval("layer.unmergeMeshes")
+
+    for child in tmp_loc.children():
+        child.select()
+
+    mesh_cleanup_versions(options)
+
+    lx.eval("layer.mergeMeshes true")
+
+    parent_item = tmp_loc.parent
+    parent_id = parent_item.id if parent_item else None
+    lx.eval("item.parent {} {} {} inPlace:1 duplicate:0".format(mesh.id, parent_id, mesh_index + 1))
+
+    modo.Scene().removeItems(tmp_loc)
+
+
 def mesh_cleanup_versions(opt: Options, last_step: bool = False) -> None:
     if lx.service.Platform().AppVersion() < 1700:  # type: ignore
         mesh_cleanup(opt, last_step)
@@ -58,14 +146,8 @@ def mesh_cleanup_versions(opt: Options, last_step: bool = False) -> None:
 
 
 def mesh_cleanup(opt: Options, last_step: bool = False) -> None:
-    if last_step:
-        silence = ''
-        context_merge_vertices = opt.last_step_merge_vertices
-    else:
-        silence = '!'
-        context_merge_vertices = opt.merge_vertices
-    lx.eval("{}mesh.cleanup {} {} {} {} {} {} {} {} {} {} {}".format(
-            silence,
+    context_merge_vertices = opt.last_step_merge_vertices if last_step else opt.merge_vertices
+    lx.eval("!mesh.cleanup {} {} {} {} {} {} {} {} {} {} {}".format(
             f'floatingVertex:{opt.remove_floating_vertices}',
             f'onePointPolygon:{opt.remove_one_point_polygons}',
             f'twoPointPolygon:{opt.remove_two_points_polygons}',
@@ -81,14 +163,8 @@ def mesh_cleanup(opt: Options, last_step: bool = False) -> None:
 
 
 def mesh_cleanup_17(opt: Options, last_step: bool = False) -> None:
-    if last_step:
-        silence = ''
-        context_merge_vertices = opt.last_step_merge_vertices
-    else:
-        silence = '!'
-        context_merge_vertices = opt.merge_vertices
-    lx.eval("{}mesh.cleanup {} {} {} {} {} {} {} {} {} {} {} {}".format(
-            silence,
+    context_merge_vertices = opt.last_step_merge_vertices if last_step else opt.merge_vertices
+    lx.eval("mesh.cleanup {} {} {} {} {} {} {} {} {} {} {} {}".format(
             f'floatingVertex:{opt.remove_floating_vertices}',
             f'onePointPolygon:{opt.remove_one_point_polygons}',
             f'twoPointPolygon:{opt.remove_two_points_polygons}',
@@ -104,80 +180,5 @@ def mesh_cleanup_17(opt: Options, last_step: bool = False) -> None:
             ))
 
 
-def main():
-    print("")
-    print("start mesh_islands_cleanup.py ...")
-
-    opt = Options()
-    opt.remove_floating_vertices = get_user_value(REMOVE_FLOATING_VERTICES)
-    opt.remove_one_point_polygons = get_user_value(REMOVE_ONE_POINT_POLYGONS)
-    opt.remove_two_points_polygons = get_user_value(REMOVE_TWO_POINTS_POLYGONS)
-    opt.fix_duplicate_points_in_polygon = get_user_value(FIX_DUPLICATE_POINTS_IN_POLYGON)
-    opt.remove_colinear_vertices = get_user_value(REMOVE_COLINEAR_VERTICES)
-    opt.fix_face_normal_vectors = get_user_value(FIX_FACE_NORMAL_VECTORS)
-    opt.merge_vertices = get_user_value(MERGE_VERTICES)
-    opt.merge_disco_values = get_user_value(MERGE_DISCO_VALUES)
-    opt.unify_polygons = get_user_value(UNIFY_POLYGONS)
-    opt.force_unify = get_user_value(FORCE_UNIFY)
-    opt.remove_disco_weight_values = get_user_value(REMOVE_DISCO_WEIGHT_VALUES)
-    opt.fix_gaps = get_user_value(FIX_GAPS)
-    opt.last_step_merge_vertices = get_user_value(LAST_STEP_MERGE_VERTICES)
-
-    args = lx.args()
-    if args:
-        if args[0] == 'nofinal':
-            opt.final_mesh_cleanup = False
-
-    # get selected meshes
-    selected_meshes: list[modo.Item] = scene.selectedByType(itype=c.MESH_TYPE)
-    # cleanup selected meshes in a loop
-    for mesh in selected_meshes:
-        # group selected mesh in a temp folder
-        mesh.select(replace=True)
-        # get root index
-        root_index = mesh.rootIndex
-        parent_index = mesh.parentIndex
-        mesh_index = root_index if root_index is not None else parent_index
-        if not mesh_index:
-            mesh_index = 0
-        group_loc = scene.addItem(itype=c.GROUPLOCATOR_TYPE)
-        group_loc.setParent(mesh.parent)
-        mesh.setParent(group_loc)
-        # unmerge mesh into a temp folder
-        mesh.select(replace=True)
-        lx.eval("layer.unmergeMeshes")
-        # select all meshes in a folder
-        for child in group_loc.children():
-            child.select()
-        # cleanup selected meshes
-        mesh_cleanup_versions(opt)
-        # merge selected meshes
-        lx.eval("layer.mergeMeshes true")
-        # parent mesh to an previous parent
-        parent_item = group_loc.parent
-        parent_id = parent_item.id if parent_item else None
-        lx.eval("item.parent {} {} {} inPlace:1 duplicate:0".format(mesh.id, parent_id, mesh_index + 1))
-        # remove a temp folder
-        scene.removeItems(group_loc)
-
-    # restore selection
-    scene.deselect()
-    for item in selected_meshes:
-        item.select()
-
-    # run one more Mesh Cleanup command with statistics
-    if opt.final_mesh_cleanup:
-        mesh_cleanup_versions(opt, last_step=True)
-
-    print("mesh_islands_cleanup.py done.")
-
-
-scene = modo.Scene()
-log_name = replace_file_ext(scene.name)
-h3dd = H3dDebug(enable=False, file=log_name)
-
 if __name__ == "__main__":
-    try:
-        main()
-    except H3dExitException as e:
-        print(e.message)
+    main()

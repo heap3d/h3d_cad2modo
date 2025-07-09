@@ -12,8 +12,7 @@ import lx
 import modo
 import modo.constants as c
 
-from h3d_utilites.scripts.h3d_utils import safe_type, itype_str, get_user_value, replace_file_ext
-from h3d_utilites.scripts.h3d_debug import H3dDebug
+from h3d_utilites.scripts.h3d_utils import safe_type, itype_str, get_user_value
 
 import h3d_cad2modo.scripts.remove_duplicated_scene_items as remove_duplicated_scene_items
 
@@ -48,6 +47,98 @@ class UserOptions:
     del_environments = False
     del_materials = False
     del_schematic_nodes = False
+
+
+def main():
+    filter_types = {itype_str(c.MESH_TYPE), itype_str(c.MORPHDEFORM_TYPE)}
+
+    opt = UserOptions()
+
+    opt.del_mesh_instance = get_user_value(USERVAL_NAME_CMR_DEL_MESH_INSTANCE)
+    opt.mesh_instance_to_mesh = get_user_value(USERVAL_NAME_CMR_MESH_INSTANCE_TO_MESH)
+    opt.mesh_instance_to_loc = get_user_value(USERVAL_NAME_CMR_MESH_INSTANCE_TO_LOC)
+    opt.del_void_mesh = get_user_value(USERVAL_NAME_CMR_DEL_VOID_MESH)
+    opt.del_loc = get_user_value(USERVAL_NAME_CMR_DEL_LOC)
+    opt.del_grp_loc = get_user_value(USERVAL_NAME_CMR_DEL_GRP_LOC)
+    opt.del_assembly = get_user_value(USERVAL_NAME_CMR_DEL_ASSEMBLY)
+    opt.del_group = get_user_value(USERVAL_NAME_CMR_DEL_GROUP)
+    opt.del_polygon_part = get_user_value(USERVAL_NAME_CMR_DEL_POLYGON_PART_TAG)
+    opt.flatten_scene = get_user_value(USERVAL_NAME_CMR_FLATTEN_SCENE)
+    opt.loc_size = get_user_value(USERVAL_NAME_CMR_MESH_LOC_SIZE)
+    opt.del_environments = get_user_value(USERVAL_NAME_CMR_DEL_ENVIRONMENT)
+    opt.del_materials = get_user_value(USERVAL_NAME_CMR_DEL_MATERIAL)
+    opt.del_schematic_nodes = get_user_value(USERVAL_NAME_CMR_DEL_SCHEMATIC_NODES)
+
+    # update safe types according to user options
+    if not opt.del_mesh_instance:
+        filter_types.add(itype_str(c.MESHINST_TYPE))
+    if opt.mesh_instance_to_mesh:
+        filter_types.add(itype_str(c.MESHINST_TYPE))
+    if not opt.del_loc:
+        filter_types.add(itype_str(c.LOCATOR_TYPE))
+    if not opt.del_grp_loc:
+        filter_types.add(itype_str(c.GROUPLOCATOR_TYPE))
+    if not opt.del_assembly:
+        filter_types.add("assembly")
+    if not opt.del_group:
+        filter_types.add(itype_str(c.GROUP_TYPE))
+    if not opt.del_environments:
+        filter_types.add(itype_str(c.ENVIRONMENT_TYPE))
+    if not opt.del_materials:
+        filter_types.add(itype_str(c.MASK_TYPE))
+        filter_types.add(itype_str(c.ADVANCEDMATERIAL_TYPE))
+        filter_types.add(itype_str(c.DEFAULTSHADER_TYPE))
+    if not opt.del_schematic_nodes:
+        filter_types.add(itype_str(c.SCHMNODE_TYPE))
+
+    # flatten scene hierarchy
+    if opt.flatten_scene:
+        flatten_scene_hierarchy()
+
+    scene_items = set(scene.items())
+    protected_items = get_protected(scene_items, filter_types, opt)
+    protected_connected_items = get_protected_connected_items(protected_items)
+    items_to_delete = scene_items - protected_items - protected_connected_items
+
+    remove_items_from_scene(items_to_delete)
+
+    if not scene.items(itype=c.ADVANCEDMATERIAL_TYPE):
+        add_base_material()
+    # process polygon parts
+    if opt.del_polygon_part:
+        for mesh in scene.items(itype=c.MESH_TYPE):
+            set_polygon_part(mesh)
+
+    selection_store = set()
+
+    # convert mesh instances to meshes
+    if opt.mesh_instance_to_mesh:
+        instances = scene.items(itype=c.MESHINST_TYPE)
+        for meshinst in instances:
+            selection_store.add(mesh_instance_to_mesh(meshinst))
+
+    # convert mesh instances to locators
+    if opt.mesh_instance_to_loc:
+        instances = scene.items(itype=c.MESHINST_TYPE)
+        for meshinst in instances:
+            loc = mesh_instance_to_loc(meshinst)
+            selection_store.add(loc)
+            loc.select(replace=True)
+            lx.eval("item.channel locator$size {}".format(opt.loc_size))
+
+    # delete mesh instances
+    if opt.del_mesh_instance:
+        instances = scene.items(itype=c.MESHINST_TYPE)
+        for meshinst in instances:
+            delete_item(meshinst)
+
+    # remove duplicated FX items
+    remove_duplicated_scene_items.main()
+
+    # select modified instances
+    scene.deselect()
+    for item in selection_store:
+        item.select()
 
 
 def is_protected_item(item, types, options):
@@ -265,11 +356,8 @@ def add_base_material():
 
 
 def set_polygon_part(mesh: modo.Item, part_tag: str = "Default"):
-    try:
-        mesh.select(replace=True)
-        lx.eval('!poly.setPart "{}"'.format(part_tag))
-    except RuntimeError as e:
-        h3dd.print_debug(f'set_polygon_part() error: {e}')
+    mesh.select(replace=True)
+    lx.eval('!poly.setPart "{}"'.format(part_tag))
 
 
 def flatten_scene_hierarchy():
@@ -312,7 +400,6 @@ def get_connected_items_to_protect(item: modo.Item, known_items: set[modo.Item])
     if item.type == itype_str(c.POLYRENDER_TYPE):
         return set()
 
-    h3dd.print_debug(f'item: <{item.name}>:<{item.type}>')
     connections: set[modo.Item] = set()
     for graph in item.itemGraphs:
         if graph.type == 'itemGroups':
@@ -324,9 +411,7 @@ def get_connected_items_to_protect(item: modo.Item, known_items: set[modo.Item])
         if graph.type == 'scene':
             continue
         forward_connections = graph.forward()
-        h3dd.print_items(forward_connections, 'forward connections:', 1)
         reverse_connections = graph.reverse()
-        h3dd.print_items(reverse_connections, 'reverse connections:', 1)
         if forward_connections:
             connections = connections.union(forward_connections)  # type: ignore
         if reverse_connections:
@@ -352,109 +437,11 @@ def get_protected_connected_items(items: set[modo.Item]) -> set[modo.Item]:
     return protected_connected_items
 
 
-def main():
-    filter_types = {itype_str(c.MESH_TYPE), itype_str(c.MORPHDEFORM_TYPE)}
-
-    opt = UserOptions()
-
-    opt.del_mesh_instance = get_user_value(USERVAL_NAME_CMR_DEL_MESH_INSTANCE)
-    opt.mesh_instance_to_mesh = get_user_value(USERVAL_NAME_CMR_MESH_INSTANCE_TO_MESH)
-    opt.mesh_instance_to_loc = get_user_value(USERVAL_NAME_CMR_MESH_INSTANCE_TO_LOC)
-    opt.del_void_mesh = get_user_value(USERVAL_NAME_CMR_DEL_VOID_MESH)
-    opt.del_loc = get_user_value(USERVAL_NAME_CMR_DEL_LOC)
-    opt.del_grp_loc = get_user_value(USERVAL_NAME_CMR_DEL_GRP_LOC)
-    opt.del_assembly = get_user_value(USERVAL_NAME_CMR_DEL_ASSEMBLY)
-    opt.del_group = get_user_value(USERVAL_NAME_CMR_DEL_GROUP)
-    opt.del_polygon_part = get_user_value(USERVAL_NAME_CMR_DEL_POLYGON_PART_TAG)
-    opt.flatten_scene = get_user_value(USERVAL_NAME_CMR_FLATTEN_SCENE)
-    opt.loc_size = get_user_value(USERVAL_NAME_CMR_MESH_LOC_SIZE)
-    opt.del_environments = get_user_value(USERVAL_NAME_CMR_DEL_ENVIRONMENT)
-    opt.del_materials = get_user_value(USERVAL_NAME_CMR_DEL_MATERIAL)
-    opt.del_schematic_nodes = get_user_value(USERVAL_NAME_CMR_DEL_SCHEMATIC_NODES)
-
-    # update safe types according to user options
-    if not opt.del_mesh_instance:
-        filter_types.add(itype_str(c.MESHINST_TYPE))
-    if opt.mesh_instance_to_mesh:
-        filter_types.add(itype_str(c.MESHINST_TYPE))
-    if not opt.del_loc:
-        filter_types.add(itype_str(c.LOCATOR_TYPE))
-    if not opt.del_grp_loc:
-        filter_types.add(itype_str(c.GROUPLOCATOR_TYPE))
-    if not opt.del_assembly:
-        filter_types.add("assembly")
-    if not opt.del_group:
-        filter_types.add(itype_str(c.GROUP_TYPE))
-    if not opt.del_environments:
-        filter_types.add(itype_str(c.ENVIRONMENT_TYPE))
-    if not opt.del_materials:
-        filter_types.add(itype_str(c.MASK_TYPE))
-        filter_types.add(itype_str(c.ADVANCEDMATERIAL_TYPE))
-        filter_types.add(itype_str(c.DEFAULTSHADER_TYPE))
-    if not opt.del_schematic_nodes:
-        filter_types.add(itype_str(c.SCHMNODE_TYPE))
-
-    # flatten scene hierarchy
-    if opt.flatten_scene:
-        flatten_scene_hierarchy()
-
-    scene_items = set(scene.items())
-    protected_items = get_protected(scene_items, filter_types, opt)
-    h3dd.print_items(protected_items, 'protected_items:')
-    protected_connected_items = get_protected_connected_items(protected_items)
-    items_to_delete = scene_items - protected_items - protected_connected_items
-
-    remove_items_from_scene(items_to_delete)
-
-    if not scene.items(itype=c.ADVANCEDMATERIAL_TYPE):
-        add_base_material()
-    # process polygon parts
-    if opt.del_polygon_part:
-        for mesh in scene.items(itype=c.MESH_TYPE):
-            set_polygon_part(mesh)
-
-    selection_store = set()
-
-    # convert mesh instances to meshes
-    if opt.mesh_instance_to_mesh:
-        instances = scene.items(itype=c.MESHINST_TYPE)
-        for meshinst in instances:
-            selection_store.add(mesh_instance_to_mesh(meshinst))
-
-    # convert mesh instances to locators
-    if opt.mesh_instance_to_loc:
-        instances = scene.items(itype=c.MESHINST_TYPE)
-        for meshinst in instances:
-            loc = mesh_instance_to_loc(meshinst)
-            selection_store.add(loc)
-            loc.select(replace=True)
-            lx.eval("item.channel locator$size {}".format(opt.loc_size))
-
-    # delete mesh instances
-    if opt.del_mesh_instance:
-        instances = scene.items(itype=c.MESHINST_TYPE)
-        for meshinst in instances:
-            delete_item(meshinst)
-
-    # remove duplicated FX items
-    remove_duplicated_scene_items.main()
-
-    # select modified instances
-    scene.deselect()
-    for item in selection_store:
-        item.select()
-
-
 if __name__ == "__main__":
-    scene = modo.Scene()
-
-    h3dd = H3dDebug(
-        enable=False, file=replace_file_ext(scene.filename, ".log")
-    )
-
     print("")
     print("meshref_cleanup.py start...")
 
+    scene = modo.Scene()
     main()
 
     print("meshref_cleanup.py done.")
