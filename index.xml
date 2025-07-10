@@ -43,6 +43,7 @@
 		<source target="h3d_cad2modo/scripts/select_siblings_bytype.py">scripts/select_siblings_bytype.py</source>
 		<source target="h3d_cad2modo/scripts/select_siblings.py">scripts/select_siblings.py</source>
 		<source target="h3d_cad2modo/scripts/select_texture_locators.py">scripts/select_texture_locators.py</source>
+		<source target="h3d_cad2modo/scripts/set_alarm_path.py">scripts/set_alarm_path.py</source>
 		<source target="h3d_cad2modo/scripts/set_def_map_path.py">scripts/set_def_map_path.py</source>
 		<source target="h3d_cad2modo/scripts/set_directory.py">scripts/set_directory.py</source>
 		<source target="h3d_cad2modo/scripts/set_filename.py">scripts/set_filename.py</source>

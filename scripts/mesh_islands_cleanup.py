@@ -33,7 +33,7 @@ USERVAL_LAST_STEP_MERGE_VERTICES = "h3d_imc_merge_vertices_last_step"
 USERVAL_FIX_GAPS = "h3d_imc_fix_gaps"
 
 USERVAL_ALARM_ENABLED = 'h3d_imc_alarm_enabled'
-USERVAL_ALARM_SOUND_PATH = 'h3d_imc_alarm_sound'
+USERVAL_ALARM_SOUND_PATH = 'h3d_imc_alarm_path'
 
 NOFINAL = 'nofinal'
 
@@ -78,7 +78,7 @@ def main():
     alarm_sound_path = get_user_value(USERVAL_ALARM_SOUND_PATH)
     if alarm_enabled:
         if not (alarm_sound_path and Path(alarm_sound_path).exists()):
-            result = modo.dialogs.fileOpen(ftype='', title='Specify alarm media file')
+            result = modo.dialogs.fileOpen(ftype='', title='Specify alarm path')
             if not result:
                 print('Mesh Cleanup cancelled. Please select alarm file or turn alarm off.')
                 return

@@ -4,7 +4,7 @@
 # heap3d@gmail.com
 # --------------------------------
 # modo python
-# get directory
+# set store directory
 # ================================
 
 import modo
