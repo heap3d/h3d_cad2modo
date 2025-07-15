@@ -100,11 +100,11 @@ def main():
     for item in selected_meshes:
         item.select()
 
-    if options.final_mesh_cleanup:
-        mesh_cleanup_versions(options, last_step=True)
-
     if alarm_enabled:
         webbrowser.open(alarm_sound_path)
+
+    if options.final_mesh_cleanup:
+        mesh_cleanup_versions(options, last_step=True)
 
 
 def cleanup(mesh: modo.Mesh, options: Options):
