@@ -77,7 +77,7 @@ def main():
     alarm_enabled = get_user_value(USERVAL_ALARM_ENABLED)
     alarm_sound_path = get_user_value(USERVAL_ALARM_SOUND_PATH)
     if alarm_enabled:
-        if not (alarm_sound_path and Path(alarm_sound_path).exists()):
+        if not (alarm_sound_path and Path(alarm_sound_path).is_file()):
             result = modo.dialogs.fileOpen(ftype='', title='Specify alarm path')
             if not result:
                 print('Mesh Cleanup cancelled. Please select alarm file or turn alarm off.')
@@ -147,7 +147,9 @@ def mesh_cleanup_versions(opt: Options, last_step: bool = False) -> None:
 
 def mesh_cleanup(opt: Options, last_step: bool = False) -> None:
     context_merge_vertices = opt.last_step_merge_vertices if last_step else opt.merge_vertices
-    lx.eval("!mesh.cleanup {} {} {} {} {} {} {} {} {} {} {}".format(
+    silent_mode = '' if last_step else '!'
+    lx.eval("{}mesh.cleanup {} {} {} {} {} {} {} {} {} {} {}".format(
+            silent_mode,
             f'floatingVertex:{opt.remove_floating_vertices}',
             f'onePointPolygon:{opt.remove_one_point_polygons}',
             f'twoPointPolygon:{opt.remove_two_points_polygons}',
@@ -164,7 +166,9 @@ def mesh_cleanup(opt: Options, last_step: bool = False) -> None:
 
 def mesh_cleanup_17(opt: Options, last_step: bool = False) -> None:
     context_merge_vertices = opt.last_step_merge_vertices if last_step else opt.merge_vertices
-    lx.eval("mesh.cleanup {} {} {} {} {} {} {} {} {} {} {} {}".format(
+    silent_mode = '' if last_step else '!'
+    lx.eval("{}mesh.cleanup {} {} {} {} {} {} {} {} {} {} {} {}".format(
+            silent_mode,
             f'floatingVertex:{opt.remove_floating_vertices}',
             f'onePointPolygon:{opt.remove_one_point_polygons}',
             f'twoPointPolygon:{opt.remove_two_points_polygons}',
