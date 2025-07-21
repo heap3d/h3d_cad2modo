@@ -32,6 +32,7 @@
 		<source target="h3d_cad2modo/scripts/select_deformable_meshes.py">scripts/select_deformable_meshes.py</source>
 		<source target="h3d_cad2modo/scripts/select_duplicated_mask.py">scripts/select_duplicated_mask.py</source>
 		<source target="h3d_cad2modo/scripts/select_item_groups.py">scripts/select_item_groups.py</source>
+		<source target="h3d_cad2modo/scripts/select_items_by_name_regex.py">scripts/select_items_by_name_regex.py</source>
 		<source target="h3d_cad2modo/scripts/select_meshes_by_name_regex.py">scripts/select_meshes_by_name_regex.py</source>
 		<source target="h3d_cad2modo/scripts/select_nondeformable_meshes.py">scripts/select_nondeformable_meshes.py</source>
 		<source target="h3d_cad2modo/scripts/select_parent.py">scripts/select_parent.py</source>

@@ -44,25 +44,6 @@ def main():
         item.select()
 
 
-# def is_name_similar(name: str, template: str, regex_pattern=REGEX_PATTERN) -> bool:
-#     template_match = re.match(regex_pattern, template)
-#     if not template_match:
-#         template_stripped = template
-#     else:
-#         template_stripped = template_match.group(1)
-
-#     name_match = re.match(regex_pattern, name)
-#     if not name_match:
-#         name_sripped = name
-#     else:
-#         name_sripped = name_match.group(1)
-
-#     if template_stripped.strip() == name_sripped.strip():
-#         return True
-
-#     return False
-
-
 def is_name_similar(name: str, template: str, regex_pattern=REGEX_PATTERN) -> bool:
     template_match = re.search(regex_pattern, template)
 
