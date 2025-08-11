@@ -108,6 +108,10 @@ def main():
 
 
 def cleanup(mesh: modo.Mesh, options: Options):
+    if not mesh.geometry.numPolygons:
+        mesh_cleanup_versions(options)
+        return
+
     mesh.select(replace=True)
 
     root_index = mesh.rootIndex
