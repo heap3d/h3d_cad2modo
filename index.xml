@@ -35,6 +35,10 @@
 		<source target="h3d_cad2modo/scripts/select_item_groups.py">scripts/select_item_groups.py</source>
 		<source target="h3d_cad2modo/scripts/select_items_by_name_regex.py">scripts/select_items_by_name_regex.py</source>
 		<source target="h3d_cad2modo/scripts/select_meshes_by_name_regex.py">scripts/select_meshes_by_name_regex.py</source>
+		<source target="h3d_cad2modo/scripts/select_meshes_by_selected_edges.py">scripts/select_meshes_by_selected_edges.py</source>
+		<source target="h3d_cad2modo/scripts/select_meshes_by_selected_geo.py">scripts/select_meshes_by_selected_geo.py</source>
+		<source target="h3d_cad2modo/scripts/select_meshes_by_selected_polygons.py">scripts/select_meshes_by_selected_polygons.py</source>
+		<source target="h3d_cad2modo/scripts/select_meshes_by_selected_vertices.py">scripts/select_meshes_by_selected_vertices.py</source>
 		<source target="h3d_cad2modo/scripts/select_nondeformable_meshes.py">scripts/select_nondeformable_meshes.py</source>
 		<source target="h3d_cad2modo/scripts/select_parent.py">scripts/select_parent.py</source>
 		<source target="h3d_cad2modo/scripts/select_schematic_nodes.py">scripts/select_schematic_nodes.py</source>
