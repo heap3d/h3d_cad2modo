@@ -11,14 +11,16 @@
 import modo
 import modo.constants as c
 
-from h3d_utilites.scripts.h3d_utils import select_if_exists
+from h3d_utilites.scripts.h3d_utils import select_if_exists, is_visible
 
 
 def main():
     selected_item = set(modo.Scene().selectedByType(c.LOCATOR_TYPE, superType=True))
     all_items = set(modo.Scene().items(itype=c.LOCATOR_TYPE, superType=True))
 
-    select_if_exists(all_items - selected_item)
+    visible_items = {item for item in all_items if is_visible(item)}
+
+    select_if_exists(visible_items - selected_item)
 
 
 if __name__ == '__main__':
