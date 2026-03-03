@@ -44,6 +44,7 @@
 		<source target="h3d_cad2modo/scripts/select_meshes_by_selected_vertices.py">scripts/select_meshes_by_selected_vertices.py</source>
 		<source target="h3d_cad2modo/scripts/select_nondeformable_meshes.py">scripts/select_nondeformable_meshes.py</source>
 		<source target="h3d_cad2modo/scripts/select_parent.py">scripts/select_parent.py</source>
+		<source target="h3d_cad2modo/scripts/select_same_reference.py">scripts/select_same_reference.py</source>
 		<source target="h3d_cad2modo/scripts/select_schematic_nodes.py">scripts/select_schematic_nodes.py</source>
 		<source target="h3d_cad2modo/scripts/select_siblings_byname_regex.py">scripts/select_siblings_byname_regex.py</source>
 		<source target="h3d_cad2modo/scripts/select_siblings_byname.py">scripts/select_siblings_byname.py</source>
