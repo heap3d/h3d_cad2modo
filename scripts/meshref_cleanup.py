@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # ================================
-# (C)2022-2024 Dmytro Holub
+# (C)2022-2026 Dmytro Holub
 # heap3d@gmail.com
 # --------------------------------
 # modo python
@@ -30,6 +30,7 @@ USERVAL_NAME_CMR_FLATTEN_SCENE = "h3d_cmr_flatten_scene"
 USERVAL_NAME_CMR_DEL_ENVIRONMENT = "h3d_cmr_del_environments"
 USERVAL_NAME_CMR_DEL_MATERIAL = "h3d_cmr_del_materials"
 USERVAL_NAME_CMR_DEL_SCHEMATIC_NODES = "h3d_cmr_del_schematic_nodes"
+USERVAL_CMR_CHECK_VMAP_NORMALS = "h3d_cmr_check_vmap_normals"
 
 
 class UserOptions:
@@ -47,6 +48,7 @@ class UserOptions:
     del_environments = False
     del_materials = False
     del_schematic_nodes = False
+    check_vmap_normals = False
 
 
 def main():
@@ -68,6 +70,7 @@ def main():
     opt.del_environments = get_user_value(USERVAL_NAME_CMR_DEL_ENVIRONMENT)
     opt.del_materials = get_user_value(USERVAL_NAME_CMR_DEL_MATERIAL)
     opt.del_schematic_nodes = get_user_value(USERVAL_NAME_CMR_DEL_SCHEMATIC_NODES)
+    opt.check_vmap_normals = get_user_value(USERVAL_CMR_CHECK_VMAP_NORMALS)
 
     # update safe types according to user options
     if not opt.del_mesh_instance:
@@ -139,6 +142,10 @@ def main():
     scene.deselect()
     for item in selection_store:
         item.select()
+
+    # check vmap normals
+    if opt.check_vmap_normals:
+        lx.eval('@h3d_merge_tools/scripts/check_vmap_normal_health.py')
 
 
 def is_protected_item(item, types, options):
