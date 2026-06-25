@@ -8,14 +8,11 @@
 # mesh cleanup by mesh islands
 # select mesh items and run the script
 
-import webbrowser
-from pathlib import Path
-
 import lx
 import modo
 import modo.constants as c
 
-from h3d_utilites.scripts.h3d_utils import get_user_value, set_user_value
+from h3d_utilites.scripts.h3d_utils import get_user_value, ExecutionTimerAlarm
 
 
 USERVAL_REMOVE_FLOATING_VERTICES = "h3d_imc_remove_floating_vertices"
@@ -31,9 +28,6 @@ USERVAL_FORCE_UNIFY = "h3d_imc_force_unify"
 USERVAL_REMOVE_DISCO_WEIGHT_VALUES = "h3d_imc_remove_disco_weight_values"
 USERVAL_LAST_STEP_MERGE_VERTICES = "h3d_imc_merge_vertices_last_step"
 USERVAL_FIX_GAPS = "h3d_imc_fix_gaps"
-
-USERVAL_ALARM_ENABLED = 'h3d_imc_alarm_enabled'
-USERVAL_ALARM_SOUND_PATH = 'h3d_imc_alarm_path'
 
 NOFINAL = 'nofinal'
 
@@ -56,8 +50,7 @@ class Options:
 
 
 def main():
-    print("")
-    print("start mesh_islands_cleanup.py ...")
+    alarm_timer = ExecutionTimerAlarm('Islands Mesh Cleanup')
 
     options = Options()
     options.remove_floating_vertices = get_user_value(USERVAL_REMOVE_FLOATING_VERTICES)
@@ -74,18 +67,6 @@ def main():
     options.fix_gaps = get_user_value(USERVAL_FIX_GAPS)
     options.last_step_merge_vertices = get_user_value(USERVAL_LAST_STEP_MERGE_VERTICES)
 
-    alarm_enabled = get_user_value(USERVAL_ALARM_ENABLED)
-    alarm_sound_path = get_user_value(USERVAL_ALARM_SOUND_PATH)
-    if alarm_enabled:
-        if not (alarm_sound_path and Path(alarm_sound_path).is_file()):
-            result = modo.dialogs.fileOpen(ftype='', title='Specify alarm path')
-            if not result:
-                print('Mesh Cleanup cancelled. Please select alarm file or turn alarm off.')
-                return
-
-            alarm_sound_path = str(result)
-            set_user_value(USERVAL_ALARM_SOUND_PATH, alarm_sound_path)
-
     args = lx.args()
     if args:
         if args[0] == 'nofinal':
@@ -100,8 +81,7 @@ def main():
     for item in selected_meshes:
         item.select()
 
-    if alarm_enabled:
-        webbrowser.open(alarm_sound_path)
+    alarm_timer.finish()
 
     if options.final_mesh_cleanup:
         mesh_cleanup_versions(options, last_step=True)
@@ -189,4 +169,9 @@ def mesh_cleanup_17(opt: Options, last_step: bool = False) -> None:
 
 
 if __name__ == "__main__":
+    print("")
+    print("start mesh_islands_cleanup.py ...")
+
     main()
+
+    print("mesh_islands_cleanup.py finished.")

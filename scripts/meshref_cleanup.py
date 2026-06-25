@@ -12,7 +12,7 @@ import lx
 import modo
 import modo.constants as c
 
-from h3d_utilites.scripts.h3d_utils import safe_type, itype_str, get_user_value
+from h3d_utilites.scripts.h3d_utils import safe_type, itype_str, get_user_value, ExecutionTimerAlarm
 
 import h3d_cad2modo.scripts.remove_duplicated_scene_items as remove_duplicated_scene_items
 
@@ -52,6 +52,7 @@ class UserOptions:
 
 
 def main():
+    alarm_timer = ExecutionTimerAlarm('MeshRef Scene Preparation')
     filter_types = {itype_str(c.MESH_TYPE), itype_str(c.MORPHDEFORM_TYPE)}
 
     opt = UserOptions()
@@ -142,6 +143,8 @@ def main():
     scene.deselect()
     for item in selection_store:
         item.select()
+
+    alarm_timer.finish()
 
     # check vmap normals
     if opt.check_vmap_normals:
