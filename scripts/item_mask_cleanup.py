@@ -14,6 +14,8 @@ import lx
 
 from h3d_utilites.scripts.h3d_utils import itype_str, get_item_mask
 
+from h3d_utilites.scripts.h3d_utils import execution_time_alarm
+
 
 RECYCLED_MASK_NAME = '--- DELETE ME ---'
 RECYCLED_MASK_COLOR = 'red'
@@ -21,7 +23,7 @@ CLEANED_MASK_NAME = 'CLEANED MASKS'
 CLEANED_MASK_COLOR = 'lightgreen'
 
 
-
+@execution_time_alarm()
 def main():
     shader_tree_masks = modo.Scene().items(itype=c.MASK_TYPE)
     root_masks = [mask for mask in shader_tree_masks if is_root_mask(mask)]

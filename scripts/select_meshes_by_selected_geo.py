@@ -12,8 +12,10 @@ from typing import Iterable
 
 import modo
 import lx
+from h3d_utilites.scripts.h3d_utils import execution_time_alarm
 
 
+@execution_time_alarm()
 def main():
     meshes: list[modo.Mesh] = modo.Scene().items(itype='mesh')  # type: ignore
 
