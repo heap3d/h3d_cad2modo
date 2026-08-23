@@ -12,7 +12,10 @@ import modo.constants as c
 
 from h3d_utilites.scripts.h3d_utils import select_if_exists
 
+from h3d_utilites.scripts.h3d_utils import execution_time_alarm
 
+
+@execution_time_alarm()
 def main():
     selected_references: list[modo.Item] = [
         item
