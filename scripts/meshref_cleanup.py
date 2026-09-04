@@ -53,6 +53,11 @@ class UserOptions:
 
 def main():
     alarm_timer = ExecutionTimerAlarm('MeshRef Scene Preparation')
+    meshref_cleanup()
+    alarm_timer.finish()
+
+
+def meshref_cleanup(suppress_vmap_normals_check: bool = False):
     filter_types = {itype_str(c.MESH_TYPE), itype_str(c.MORPHDEFORM_TYPE)}
 
     opt = UserOptions()
@@ -99,31 +104,31 @@ def main():
     if opt.flatten_scene:
         flatten_scene_hierarchy()
 
-    scene_items = set(scene.items())
+    scene_items = set(modo.Scene().items())
     protected_items = get_protected(scene_items, filter_types, opt)
     protected_connected_items = get_protected_connected_items(protected_items)
     items_to_delete = scene_items - protected_items - protected_connected_items
 
     remove_items_from_scene(items_to_delete)
 
-    if not scene.items(itype=c.ADVANCEDMATERIAL_TYPE):
+    if not modo.Scene().items(itype=c.ADVANCEDMATERIAL_TYPE):
         add_base_material()
     # process polygon parts
     if opt.del_polygon_part:
-        for mesh in scene.items(itype=c.MESH_TYPE):
+        for mesh in modo.Scene().items(itype=c.MESH_TYPE):
             set_polygon_part(mesh)
 
     selection_store = set()
 
     # convert mesh instances to meshes
     if opt.mesh_instance_to_mesh:
-        instances = scene.items(itype=c.MESHINST_TYPE)
+        instances = modo.Scene().items(itype=c.MESHINST_TYPE)
         for meshinst in instances:
             selection_store.add(mesh_instance_to_mesh(meshinst))
 
     # convert mesh instances to locators
     if opt.mesh_instance_to_loc:
-        instances = scene.items(itype=c.MESHINST_TYPE)
+        instances = modo.Scene().items(itype=c.MESHINST_TYPE)
         for meshinst in instances:
             loc = mesh_instance_to_loc(meshinst)
             selection_store.add(loc)
@@ -132,7 +137,7 @@ def main():
 
     # delete mesh instances
     if opt.del_mesh_instance:
-        instances = scene.items(itype=c.MESHINST_TYPE)
+        instances = modo.Scene().items(itype=c.MESHINST_TYPE)
         for meshinst in instances:
             delete_item(meshinst)
 
@@ -140,14 +145,12 @@ def main():
     remove_duplicated_scene_items.main()
 
     # select modified instances
-    scene.deselect()
+    modo.Scene().deselect()
     for item in selection_store:
         item.select()
 
-    alarm_timer.finish()
-
     # check vmap normals
-    if opt.check_vmap_normals:
+    if opt.check_vmap_normals and not suppress_vmap_normals_check:
         lx.eval('@h3d_merge_tools/scripts/check_vmap_normal_health.py')
 
 
@@ -200,34 +203,34 @@ def get_static_protected():
     """get list of options independent protected items"""
     static_protected = set()
     # Scene item
-    static_protected.add(scene.sceneItem)
+    static_protected.add(modo.Scene().sceneItem)
     # Render item
-    static_protected.add(scene.renderItem)
+    static_protected.add(modo.Scene().renderItem)
     # Bake items
-    bake_items = scene.items(itype=c.SHADERFOLDER_TYPE, name="Bake Items*")
+    bake_items = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name="Bake Items*")
     static_protected.update(bake_items[:1])
     # Nodes
-    nodes = scene.items(itype=c.SHADERFOLDER_TYPE, name="Nodes*")
+    nodes = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name="Nodes*")
     static_protected.update(nodes[:1])
     # Environments
-    environments = scene.items(itype=c.SHADERFOLDER_TYPE, name="Environments*")
+    environments = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name="Environments*")
     static_protected.update(environments[:1])
     # Library
-    librarys = scene.items(itype=c.SHADERFOLDER_TYPE, name="Library*")
+    librarys = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name="Library*")
     static_protected.update(librarys[:1])
     # Lights
-    lights = scene.items(itype=c.SHADERFOLDER_TYPE, name="Lights*")
+    lights = modo.Scene().items(itype=c.SHADERFOLDER_TYPE, name="Lights*")
     static_protected.update(lights[:1])
     # Base material
     root_mats = [
         i
-        for i in scene.items(itype=c.ADVANCEDMATERIAL_TYPE)
+        for i in modo.Scene().items(itype=c.ADVANCEDMATERIAL_TYPE)
         if (i.parent is None or i.parent.type == itype_str(c.POLYRENDER_TYPE))
     ]
     static_protected.update(root_mats[:1])
     # Transforms
     transforms = set(
-        i for i in scene.items(itype=c.TRANSFORM_TYPE, superType=True)
+        i for i in modo.Scene().items(itype=c.TRANSFORM_TYPE, superType=True)
     )
     static_protected.update(transforms)
 
@@ -313,7 +316,7 @@ def delete_item(item):
         item.select(replace=True)
     except LookupError:
         return
-    scene.removeItems(item)
+    modo.Scene().removeItems(item)
 
 
 def remove_items_from_scene(items):
@@ -336,7 +339,7 @@ def remove_items_from_scene(items):
     duplicates = set()
     if len(environments) == 1:
         for env in environments:
-            duplicates.add(scene.duplicateItem(env))
+            duplicates.add(modo.Scene().duplicateItem(env))
     environments.update(duplicates)
     for environment in environments:
         delete_item(environment)
@@ -344,7 +347,7 @@ def remove_items_from_scene(items):
 
     # octane material overrides
     try:
-        octane_mats = set(scene.items(itype="material.octaneRenderer"))
+        octane_mats = set(modo.Scene().items(itype="material.octaneRenderer"))
         for octane_mat in octane_mats:
             delete_item(octane_mat)
         items = items - octane_mats
@@ -357,11 +360,11 @@ def remove_items_from_scene(items):
 
 
 def add_base_material():
-    scene.renderItem.select()
+    modo.Scene().renderItem.select()
     lx.eval("shader.create advancedMaterial")
-    scene.renderItem.select()
+    modo.Scene().renderItem.select()
     lx.eval("material.smoothAreaWeight area")
-    scene.renderItem.select()
+    modo.Scene().renderItem.select()
     lx.eval("material.smoothWeight angle true")
 
 
@@ -371,7 +374,7 @@ def set_polygon_part(mesh: modo.Item, part_tag: str = "Default"):
 
 
 def flatten_scene_hierarchy():
-    for item in scene.items(itype=c.LOCATOR_TYPE, superType=True):
+    for item in modo.Scene().items(itype=c.LOCATOR_TYPE, superType=True):
         if not item.parent:
             continue
         item.select(replace=True)
@@ -383,7 +386,7 @@ def mesh_instance_to_mesh(meshinst):
     name = meshinst.name
     lx.eval("item.setType mesh locator")
     lx.eval("item.name {{{}}} locator".format(name))
-    return scene.selectedByType(itype=c.MESH_TYPE)[0]
+    return modo.Scene().selectedByType(itype=c.MESH_TYPE)[0]
 
 
 def mesh_instance_to_loc(meshinst):
@@ -391,7 +394,7 @@ def mesh_instance_to_loc(meshinst):
     name = meshinst.name
     lx.eval("item.setType locator locator")
     lx.eval("item.name {{{}}} locator".format(name))
-    return scene.selectedByType(itype=c.LOCATOR_TYPE)[0]
+    return modo.Scene().selectedByType(itype=c.LOCATOR_TYPE)[0]
 
 
 def get_connected_items_to_protect(item: modo.Item, known_items: set[modo.Item]) -> set[modo.Item]:
@@ -451,7 +454,6 @@ if __name__ == "__main__":
     print("")
     print("meshref_cleanup.py start...")
 
-    scene = modo.Scene()
     main()
 
     print("meshref_cleanup.py done.")

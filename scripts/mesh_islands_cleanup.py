@@ -51,7 +51,11 @@ class Options:
 
 def main():
     alarm_timer = ExecutionTimerAlarm('Islands Mesh Cleanup')
+    mesh_islands_cleanup()
+    alarm_timer.finish()
 
+
+def mesh_islands_cleanup(supress_final_cleanup: bool = False):
     options = Options()
     options.remove_floating_vertices = get_user_value(USERVAL_REMOVE_FLOATING_VERTICES)
     options.remove_one_point_polygons = get_user_value(USERVAL_REMOVE_ONE_POINT_POLYGONS)
@@ -81,9 +85,7 @@ def main():
     for item in selected_meshes:
         item.select()
 
-    alarm_timer.finish()
-
-    if options.final_mesh_cleanup:
+    if options.final_mesh_cleanup and not supress_final_cleanup:
         mesh_cleanup_versions(options, last_step=True)
 
 
