@@ -16,6 +16,8 @@ from h3d_utilites.scripts.h3d_utils import safe_type, itype_str, get_user_value,
 
 import h3d_cad2modo.scripts.remove_duplicated_scene_items as remove_duplicated_scene_items
 
+from h3d_merge_tools.scripts.check_vmap_normal_health import check_vmap_normal_health
+
 USERVAL_NAME_CMR_DEL_MESH_INSTANCE = "h3d_cmr_del_mesh_instance"
 USERVAL_NAME_CMR_MESH_INSTANCE_TO_MESH = "h3d_cmr_mesh_instance_to_mesh"
 USERVAL_NAME_CMR_MESH_INSTANCE_TO_LOC = "h3d_cmr_mesh_instance_to_loc"
@@ -53,11 +55,14 @@ class UserOptions:
 
 def main():
     alarm_timer = ExecutionTimerAlarm('MeshRef Scene Preparation')
-    meshref_cleanup()
+    message = meshref_cleanup(supress_warnings=True)
     alarm_timer.finish()
 
+    if message:
+        modo.dialogs.alert(title='Vertex Normal Map Names', dtype='info', message=message)
 
-def meshref_cleanup(suppress_vmap_normals_check: bool = False):
+
+def meshref_cleanup(suppress_vmap_normals_check=False, supress_warnings=False) -> str:
     filter_types = {itype_str(c.MESH_TYPE), itype_str(c.MORPHDEFORM_TYPE)}
 
     opt = UserOptions()
@@ -141,7 +146,6 @@ def meshref_cleanup(suppress_vmap_normals_check: bool = False):
         for meshinst in instances:
             delete_item(meshinst)
 
-    # remove duplicated FX items
     remove_duplicated_scene_items.main()
 
     # select modified instances
@@ -149,9 +153,11 @@ def meshref_cleanup(suppress_vmap_normals_check: bool = False):
     for item in selection_store:
         item.select()
 
-    # check vmap normals
+    message = ''
     if opt.check_vmap_normals and not suppress_vmap_normals_check:
-        lx.eval('@h3d_merge_tools/scripts/check_vmap_normal_health.py')
+        message += check_vmap_normal_health(show_ok=True, supress_warnings=supress_warnings)
+
+    return message
 
 
 def is_protected_item(item, types, options):
@@ -314,14 +320,14 @@ def get_root_assemblies(assemblies) -> set[modo.Item]:
 def delete_item(item):
     try:
         item.select(replace=True)
-    except LookupError:
+    except (LookupError, AttributeError):
         return
     modo.Scene().removeItems(item)
 
 
 def remove_items_from_scene(items):
     # process assemblies
-    assemblies = set(i for i in items if i.type == "assembly")
+    assemblies = set(i for i in items if safe_type(i) == "assembly")
     clear_assemblies(assemblies)
     root_assemblies = get_root_assemblies(assemblies)
     for root_assembly in root_assemblies:
@@ -335,7 +341,7 @@ def remove_items_from_scene(items):
     items = items - groups
 
     # remove all environments
-    environments = set(i for i in items if i.type == itype_str(c.ENVIRONMENT_TYPE))
+    environments = set(i for i in items if safe_type(i) == itype_str(c.ENVIRONMENT_TYPE))
     duplicates = set()
     if len(environments) == 1:
         for env in environments:
@@ -369,8 +375,11 @@ def add_base_material():
 
 
 def set_polygon_part(mesh: modo.Item, part_tag: str = "Default"):
-    mesh.select(replace=True)
-    lx.eval('!poly.setPart "{}"'.format(part_tag))
+    try:
+        mesh.select(replace=True)
+        lx.eval('!poly.setPart "{}"'.format(part_tag))
+    except RuntimeError:
+        pass
 
 
 def flatten_scene_hierarchy():
