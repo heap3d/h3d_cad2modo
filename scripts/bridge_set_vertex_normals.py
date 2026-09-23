@@ -47,12 +47,14 @@ def main():
     old_selection_mode = get_selection_mode()
     set_selection_mode(SELECTION_MODE.POLYGON.value)
     drop_selection(SELECTION_MODE.POLYGON.value)
-    select_polygons(polygons_new)
 
-    vmap_name = get_user_value(USERVAL_VMAP_NORMAL_PERFECT_NAME)
-    if not vmap_name:
-        vmap_name = DEFAULT_VMAP_NORMAL_PERFECT_NAME
-    set_vertex_normals(vmap_name)
+    if polygons_new:
+        select_polygons(polygons_new)
+
+        vmap_name = get_user_value(USERVAL_VMAP_NORMAL_PERFECT_NAME)
+        if not vmap_name:
+            vmap_name = DEFAULT_VMAP_NORMAL_PERFECT_NAME
+        set_vertex_normals(vmap_name)
 
     set_selection_mode(old_selection_mode)
 
