@@ -48,7 +48,7 @@ def main():
     set_selection_mode(SELECTION_MODE.POLYGON.value)
     drop_selection(SELECTION_MODE.POLYGON.value)
 
-    if polygons_new:
+    if polygons_new and is_vertex_normals_exist(mesh):
         select_polygons(polygons_new)
 
         vmap_name = get_user_value(USERVAL_VMAP_NORMAL_PERFECT_NAME)
@@ -67,6 +67,18 @@ def bridge_selected():
 
 def set_vertex_normals(vmap_name: str = 'Vertex Normal'):
     lx.eval(f'vertMap.normals "{vmap_name}" true 1.0 "" false')
+
+
+def is_vertex_normals_exist(mesh: modo.Mesh) -> bool:
+    vmaps = mesh.geometry.vmaps
+    if vmaps is None:
+        return False
+
+    vmap_normal_maps = vmaps.getMapsByType(lx.symbol.i_VMAP_NORMAL)
+    if not vmap_normal_maps:
+        return False
+
+    return True
 
 
 if __name__ == '__main__':
