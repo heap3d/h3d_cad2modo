@@ -3,6 +3,8 @@
 	<kit name="h3d_cad2modo" restart="YES">
 		<source target="h3d_cad2modo/index.CFG">index.CFG</source>
 		<source target="h3d_cad2modo/index.xml">index.xml</source>
+		<source target="h3d_cad2modo/scripts/add_and_link_channel_to_control.py">scripts/add_and_link_channel_to_control.py</source>
+		<source target="h3d_cad2modo/scripts/add_channel_to_control.py">scripts/add_channel_to_control.py</source>
 		<source target="h3d_cad2modo/scripts/add_materials_by_tag_name_selected_mesh_specific.py">scripts/add_materials_by_tag_name_selected_mesh_specific.py</source>
 		<source target="h3d_cad2modo/scripts/add_materials_by_tag_name_selected_mesh.py">scripts/add_materials_by_tag_name_selected_mesh.py</source>
 		<source target="h3d_cad2modo/scripts/add_materials_by_tag_name_specific.py">scripts/add_materials_by_tag_name_specific.py</source>
@@ -56,6 +58,7 @@
 		<source target="h3d_cad2modo/scripts/select_siblings_bytype_byname.py">scripts/select_siblings_bytype_byname.py</source>
 		<source target="h3d_cad2modo/scripts/select_siblings_bytype_byname_regex.py">scripts/select_siblings_bytype_byname_regex.py</source>
 		<source target="h3d_cad2modo/scripts/select_texture_locators.py">scripts/select_texture_locators.py</source>
+		<source target="h3d_cad2modo/scripts/set_as_control.py">scripts/set_as_control.py</source>
 		<source target="h3d_cad2modo/scripts/set_def_map_path.py">scripts/set_def_map_path.py</source>
 		<source target="h3d_cad2modo/scripts/set_directory.py">scripts/set_directory.py</source>
 		<source target="h3d_cad2modo/scripts/set_filename.py">scripts/set_filename.py</source>

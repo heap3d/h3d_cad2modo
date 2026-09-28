@@ -56,3 +56,5 @@ USERVAL_IGNORE_HIDDEN = 'h3d_ssib_ignore_hidden'
 USERVAL_REGEX_PATTERN = 'h3d_ssib_regex'
 
 REGEX_PATTERN = r'^(.*?)[._ (d)]*[ ().\d]*\d*\)?$'
+
+USERVAL_NAME_CONTROL_ITEM = 'h3d_scc_control_item'
