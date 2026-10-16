@@ -7,16 +7,25 @@
 # EMAG
 # adding selected channel from selected item to user channel of a specified control item
 
-from typing import Union, Optional
-import re
-
-import lx
 import modo
 
-from h3d_utilites.scripts.h3d_utils import get_user_value
+from h3d_utilites.scripts.h3d_utils import (
+    get_user_value,
+    select_if_exists,
+)
 
 from h3d_cad2modo.scripts.h3d_kit_constants import USERVAL_NAME_CONTROL_ITEM
-from h3d_cad2modo.scripts.add_and_link_channel_to_control import get_channel_selection, get_channel_item, recompile_nospaces, get_channel_name, get_channel_mode, get_channel_type, create_user_channel
+
+from h3d_cad2modo.scripts.add_and_link_channel_to_control import (
+    get_channel_selection,
+    get_channel_item,
+    recompile_nospaces,
+    get_channel_name,
+    get_channel_mode,
+    get_channel_type,
+    create_user_channel,
+    define_user_values,
+)
 
 
 ALERT_TITLE = 'Add Channel To Control'
@@ -29,6 +38,7 @@ def main():
         modo.dialogs.alert(ALERT_TITLE, 'No selected channels detected')
         return
 
+    define_user_values()
     control_name = get_user_value(USERVAL_NAME_CONTROL_ITEM)
 
     try:
@@ -39,8 +49,11 @@ def main():
         modo.dialogs.alert(ALERT_TITLE, 'No Control detected. Please set an item as Control')
         return
 
+    items: set[modo.Item] = set()
     for channel in channels:
         channel_item = get_channel_item(channel)
+        to_item: modo.Item = channel.item # type: ignore
+        items.update(to_item.itemGraph('xfrmCore').forward()) # type: ignore
         itemname_nospaces = recompile_nospaces(channel_item.id)
         name = f'{CONTROL_CHANNEL_PREFIX}{itemname_nospaces}_{get_channel_name(channel)}'
         username = f'{get_channel_item(channel).name} {get_channel_name(channel)}'
@@ -52,7 +65,7 @@ def main():
         except RuntimeError:
             print(f'Error creating and linking channels for <{channel}> Possible dublication, skipped.')
 
-    control.select(replace=True)
+    select_if_exists(items)
 
 
 if __name__ == '__main__':

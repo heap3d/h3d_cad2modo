@@ -7,13 +7,18 @@
 # EMAG
 # adding selected channel from selected item to user channel of a specified control item
 
-from typing import Union, Optional
+from typing import Union
 import re
 
 import lx
 import modo
 
-from h3d_utilites.scripts.h3d_utils import get_user_value
+from h3d_utilites.scripts.h3d_utils import (
+    get_user_value,
+    is_defined_user_value,
+    def_new_user_value,
+    select_if_exists,
+)
 
 from h3d_cad2modo.scripts.h3d_kit_constants import USERVAL_NAME_CONTROL_ITEM
 
@@ -30,6 +35,7 @@ def main():
         modo.dialogs.alert(ALERT_TITLE, 'No selected channels detected')
         return
 
+    define_user_values()
     control_name = get_user_value(USERVAL_NAME_CONTROL_ITEM)
 
     try:
@@ -40,6 +46,7 @@ def main():
         modo.dialogs.alert(ALERT_TITLE, 'No Control detected. Please set an item as Control')
         return
 
+    items: set[modo.Item] = set()
     for channel in channels:
         channel_item = get_channel_item(channel)
         itemname_nospaces = recompile_nospaces(channel_item.id)
@@ -50,14 +57,20 @@ def main():
 
         try:
             create_user_channel(control, name, username, mode, ch_type)
-            from_channel: modo.Channel = control.channel(name)
-            to_item: modo.Item = channel.item
-            to_channel = to_item.channel(channel.name)
-            link_channels(from_channel, to_channel)
+            from_channel: modo.Channel = control.channel(name) # type: ignore
+            to_item: modo.Item = channel.item # type: ignore
+            to_channel = to_item.channel(channel.name) # type: ignore
+            link_channels(from_channel, to_channel) # type: ignore
+            items.update(to_item.itemGraph('xfrmCore').forward()) # type: ignore
         except RuntimeError:
             print(f'Error creating and linking channels for <{channel}> Possible dublication, skipped.')
 
-    control.select(replace=True)
+    select_if_exists(items)
+
+
+def define_user_values():
+    if not is_defined_user_value(USERVAL_NAME_CONTROL_ITEM):
+        def_new_user_value(USERVAL_NAME_CONTROL_ITEM, 'string', 'temporary')
 
 
 def  get_channel_selection() -> list[CHANNEL]:

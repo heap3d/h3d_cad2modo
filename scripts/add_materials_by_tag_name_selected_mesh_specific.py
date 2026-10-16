@@ -11,14 +11,14 @@ import lx
 import modo
 import modo.constants as c
 
-from h3d_utilites.scripts.h3d_utils import get_user_value
+from h3d_utilites.scripts.h3d_utils import get_user_value, execution_time_alarm
+
 import h3d_cad2modo.scripts.h3d_kit_constants as h3dc
 from h3d_cad2modo.scripts.unassigned_ptags import assign_materials_to_unassigned_ptags
 
 
+@execution_time_alarm('Add Materials By Tag Name Selected Mesh Specific')
 def main():
-    print('add_materials_by_tag_name_selected_mesh_specific.py start...')
-
     meshes = scene.selectedByType(itype=c.MESH_TYPE)
     masks = scene.items(itype=c.MASK_TYPE)
 

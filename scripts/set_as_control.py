@@ -13,6 +13,7 @@ import modo.constants as c
 from h3d_utilites.scripts.h3d_utils import set_user_value
 
 from h3d_cad2modo.scripts.h3d_kit_constants import USERVAL_NAME_CONTROL_ITEM
+from h3d_cad2modo.scripts.add_and_link_channel_to_control import define_user_values
 
 ALERT_TITLE = 'Set As Control'
 
@@ -24,6 +25,8 @@ def main():
         modo.dialogs.alert(ALERT_TITLE, 'Please select the item you want to set as the control.')
 
     control_item: modo.Item = selected[-1]
+
+    define_user_values()
     set_user_value(USERVAL_NAME_CONTROL_ITEM, control_item.name)
 
 
