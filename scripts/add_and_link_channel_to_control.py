@@ -49,19 +49,21 @@ def main():
     items: set[modo.Item] = set()
     for channel in channels:
         channel_item = get_channel_item(channel)
+        to_item: modo.Item = channel.item # type: ignore
+        connected_items: list[modo.Item] = to_item.itemGraph('xfrmCore').forward() # type: ignore
+        if connected_items:
+            items.update(connected_items)
         itemname_nospaces = recompile_nospaces(channel_item.id)
         name = f'{CONTROL_CHANNEL_PREFIX}{itemname_nospaces}_{get_channel_name(channel)}'
-        username = f'{get_channel_item(channel).name} {get_channel_name(channel)}'
+        username = f'{connected_items[0].name} {get_channel_name(channel)}'
         mode = get_channel_mode(channel)
         ch_type = get_channel_type(channel)
 
         try:
             create_user_channel(control, name, username, mode, ch_type)
             from_channel: modo.Channel = control.channel(name) # type: ignore
-            to_item: modo.Item = channel.item # type: ignore
             to_channel = to_item.channel(channel.name) # type: ignore
             link_channels(from_channel, to_channel) # type: ignore
-            items.update(to_item.itemGraph('xfrmCore').forward()) # type: ignore
         except RuntimeError:
             print(f'Error creating and linking channels for <{channel}> Possible dublication, skipped.')
 

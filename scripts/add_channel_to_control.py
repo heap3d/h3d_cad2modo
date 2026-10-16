@@ -53,10 +53,11 @@ def main():
     for channel in channels:
         channel_item = get_channel_item(channel)
         to_item: modo.Item = channel.item # type: ignore
-        items.update(to_item.itemGraph('xfrmCore').forward()) # type: ignore
+        connected_items: list[modo.Item] = to_item.itemGraph('xfrmCore').forward() # type: ignore
+        items.update(connected_items) # type: ignore
         itemname_nospaces = recompile_nospaces(channel_item.id)
         name = f'{CONTROL_CHANNEL_PREFIX}{itemname_nospaces}_{get_channel_name(channel)}'
-        username = f'{get_channel_item(channel).name} {get_channel_name(channel)}'
+        username = f'{connected_items[0].name} {get_channel_name(channel)}'
         mode = get_channel_mode(channel)
         ch_type = get_channel_type(channel)
 
